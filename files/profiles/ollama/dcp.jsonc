@@ -1,0 +1,20 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Opencode-DCP/opencode-dynamic-context-pruning/master/dcp.schema.json",
+    "experimental": {
+        // Enable prompt overrides so the dcp-prompts/overrides files are picked up
+        "customPrompts": true,
+    },
+    // Keep manualMode OFF so the compress tool remains available for explicit use
+    // Nudging is disabled via maxContextLimit set very high and pruneNotification off
+    "manualMode": {
+        "enabled": false,
+        "automaticStrategies": true,
+    },
+    "pruneNotification": "off",
+    "compress": {
+        "permission": "allow",
+        // Set maxContextLimit very high so automatic nudges never fire
+        "maxContextLimit": 9999999,
+        "minContextLimit": 9999998,
+    },
+}
