@@ -76,18 +76,6 @@
     "autonomous-agent": {
       "model": "ollama/opencode-model"
     },
-    "dag-designer": {
-      "model": "ollama/opencode-model"
-    },
-    "dag-description-author": {
-      "model": "ollama/opencode-model"
-    },
-    "dag-reviewer": {
-      "model": "ollama/opencode-model"
-    },
-    "dag-reviser": {
-      "model": "ollama/opencode-model"
-    },
     "compaction": {
       "model": "ollama/opencode-model"
     }

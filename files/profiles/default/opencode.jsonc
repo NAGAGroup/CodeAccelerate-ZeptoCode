@@ -1,7 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "autoupdate": false,
-  "small_model": "opencode/big-pickle",
   "plugin": ["file://{env:HOME}/.config/opencode/plugins/planning-enforcement.js"],
   "default_agent": "headwrench",
   "agent": {
@@ -39,18 +38,6 @@
       "model": "anthropic/claude-sonnet-4-6"
     },
     "autonomous-agent": {
-      "model": "anthropic/claude-sonnet-4-6"
-    },
-    "dag-designer": {
-      "model": "anthropic/claude-sonnet-4-6"
-    },
-    "dag-description-author": {
-      "model": "anthropic/claude-haiku-4-5"
-    },
-    "dag-reviewer": {
-      "model": "anthropic/claude-sonnet-4-6"
-    },
-    "dag-reviser": {
       "model": "anthropic/claude-sonnet-4-6"
     },
     "compaction": {

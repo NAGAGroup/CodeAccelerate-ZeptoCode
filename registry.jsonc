@@ -1,32 +1,15 @@
 {
-  // OCX Registry Starter Template
-  // Use this as a starting point for creating your own component registry
-  //
-  // Schema reference: https://ocx.kdco.dev/schemas/v2/registry.json
-  // Documentation: https://github.com/kdcokenny/ocx
   "$schema": "https://ocx.kdco.dev/schemas/v2/registry.json",
   "name": "Naga Group",
-  // Registry refs use the alias chosen by users via:
-  // ocx registry add <url> --name <alias>
-  "version": "4.0.0",
+  "version": "0.99.0",
   "author": "Jack Myers",
-  // Compatibility versions
-  "opencode": "1.27.0", // Minimum OpenCode version required
-  "ocx": "1.0.16", // Minimum OCX CLI version required
+  "opencode": "1.27.0",
+  "ocx": "1.0.16",
   "components": [
-    // Add your components here
-    // Supported types:
-    //   - skill     - Knowledge modules (markdown files)
-    //   - agent     - AI personas with custom prompts
-    //   - plugin    - TypeScript plugins that extend functionality
-    //   - command   - User-invokable commands
-    //   - tool      - Custom tool implementations
-    //   - bundle    - Collections of related components
-    //   - profile   - Shareable profile configuration
     {
       "name": "ocx-planning-plugin",
       "type": "plugin",
-      "description": "NAGAGroup's DAG-driven planning plugin",
+      "description": "PicoCode — DAG-driven planning and execution plugin for OpenCode",
       "files": [
         "plugins/planning-enforcement.js",
         // Plan session DAG
@@ -35,11 +18,8 @@
         "planning/plan-session/prompts/session-overview.md",
         "planning/plan-session/prompts/orientation-scout.md",
         "planning/plan-session/prompts/external-research.md",
-        "planning/plan-session/prompts/store-notes.md",
         "planning/plan-session/prompts/draft-plan.md",
         "planning/plan-session/prompts/plan-success.md",
-        // Node library catalogue
-        "planning/plan-session/node-library/CATALOGUE.md",
         // Node library: backend nodes
         "planning/plan-session/node-library/execution-kickoff/node-spec.json",
         "planning/plan-session/node-library/execution-kickoff/prompt.md",
@@ -61,16 +41,17 @@
         "planning/plan-session/node-library/documentation-expert-work-item/prompt.md",
         "planning/plan-session/node-library/documentation-expert-fix-item/node-spec.json",
         "planning/plan-session/node-library/documentation-expert-fix-item/prompt.md",
-        // Node library: branching nodes
+        // Node library: verification nodes
         "planning/plan-session/node-library/verify-work-item/node-spec.json",
         "planning/plan-session/node-library/verify-work-item/prompt.md",
         "planning/plan-session/node-library/verify-triage/node-spec.json",
         "planning/plan-session/node-library/verify-triage/prompt.md",
+        // Node library: decision nodes
         "planning/plan-session/node-library/decision-gate/node-spec.json",
         "planning/plan-session/node-library/decision-gate/prompt.md",
         "planning/plan-session/node-library/user-decision-gate/node-spec.json",
         "planning/plan-session/node-library/user-decision-gate/prompt.md",
-        // Node library: special action nodes
+        // Node library: utility nodes
         "planning/plan-session/node-library/user-discussion/node-spec.json",
         "planning/plan-session/node-library/user-discussion/prompt.md",
         "planning/plan-session/node-library/write-notes/node-spec.json",
@@ -86,7 +67,7 @@
     {
       "name": "ocx-bundle",
       "type": "bundle",
-      "description": "NAGAGroup's base opencode distro files",
+      "description": "PicoCode — agents, commands, and skills",
       "files": [
         // Agents
         "agents/autonomous-agent.md",
@@ -102,212 +83,67 @@
         "commands/activate-plan.md",
         "commands/plan-session.md",
         // Skills
-         "skills/planning-schema/SKILL.md",
-         "skills/following-plans/SKILL.md"
+        "skills/planning-schema/SKILL.md",
+        "skills/following-plans/SKILL.md"
       ]
     },
     {
       "name": "ocx-default",
       "type": "profile",
-      "description": "NAGAGroup's default profile (Anthropic)",
+      "description": "PicoCode — Anthropic profile (Sonnet + Haiku)",
       "files": [
-        {
-          "path": "profiles/default/opencode.jsonc",
-          "target": "opencode.jsonc"
-        },
-        {
-          "path": "profiles/default/ocx.jsonc",
-          "target": "ocx.jsonc"
-        },
-        {
-          "path": "profiles/default/dcp.jsonc",
-          "target": "dcp.jsonc"
-        },
-        {
-          "path": "profiles/default/dcp-prompts/overrides/system.md",
-          "target": "dcp-prompts/overrides/system.md"
-        },
-        {
-          "path": "profiles/default/dcp-prompts/overrides/context-limit-nudge.md",
-          "target": "dcp-prompts/overrides/context-limit-nudge.md"
-        },
-        {
-          "path": "profiles/default/dcp-prompts/overrides/turn-nudge.md",
-          "target": "dcp-prompts/overrides/turn-nudge.md"
-        },
-        {
-          "path": "profiles/default/dcp-prompts/overrides/iteration-nudge.md",
-          "target": "dcp-prompts/overrides/iteration-nudge.md"
-        }
+        { "path": "profiles/default/opencode.jsonc", "target": "opencode.jsonc" },
+        { "path": "profiles/default/ocx.jsonc", "target": "ocx.jsonc" }
       ],
-      "dependencies": [
-        "ocx-bundle"
-      ]
+      "dependencies": ["ocx-bundle"]
     },
     {
       "name": "ocx-copilot",
       "type": "profile",
-      "description": "NAGAGroup's copilot profile",
+      "description": "PicoCode — GitHub Copilot profile",
       "files": [
-        {
-          "path": "profiles/copilot/opencode.jsonc",
-          "target": "opencode.jsonc"
-        },
-        {
-          "path": "profiles/copilot/ocx.jsonc",
-          "target": "ocx.jsonc"
-        },
-        {
-          "path": "profiles/copilot/dcp.jsonc",
-          "target": "dcp.jsonc"
-        },
-        {
-          "path": "profiles/copilot/dcp-prompts/overrides/system.md",
-          "target": "dcp-prompts/overrides/system.md"
-        },
-        {
-          "path": "profiles/copilot/dcp-prompts/overrides/context-limit-nudge.md",
-          "target": "dcp-prompts/overrides/context-limit-nudge.md"
-        },
-        {
-          "path": "profiles/copilot/dcp-prompts/overrides/turn-nudge.md",
-          "target": "dcp-prompts/overrides/turn-nudge.md"
-        },
-        {
-          "path": "profiles/copilot/dcp-prompts/overrides/iteration-nudge.md",
-          "target": "dcp-prompts/overrides/iteration-nudge.md"
-        }
+        { "path": "profiles/copilot/opencode.jsonc", "target": "opencode.jsonc" },
+        { "path": "profiles/copilot/ocx.jsonc", "target": "ocx.jsonc" }
       ],
-      "dependencies": [
-        "ocx-bundle"
-      ]
+      "dependencies": ["ocx-bundle"]
     },
     {
       "name": "ocx-haiku",
       "type": "profile",
-      "description": "NAGAGroup's haiku profile (Anthropic, all haiku models)",
+      "description": "PicoCode — Anthropic Haiku profile (all Haiku models)",
       "files": [
-        {
-          "path": "profiles/haiku/opencode.jsonc",
-          "target": "opencode.jsonc"
-        },
-        {
-          "path": "profiles/haiku/ocx.jsonc",
-          "target": "ocx.jsonc"
-        },
-        {
-          "path": "profiles/haiku/dcp.jsonc",
-          "target": "dcp.jsonc"
-        },
-        {
-          "path": "profiles/haiku/dcp-prompts/overrides/system.md",
-          "target": "dcp-prompts/overrides/system.md"
-        },
-        {
-          "path": "profiles/haiku/dcp-prompts/overrides/context-limit-nudge.md",
-          "target": "dcp-prompts/overrides/context-limit-nudge.md"
-        },
-        {
-          "path": "profiles/haiku/dcp-prompts/overrides/turn-nudge.md",
-          "target": "dcp-prompts/overrides/turn-nudge.md"
-        },
-        {
-          "path": "profiles/haiku/dcp-prompts/overrides/iteration-nudge.md",
-          "target": "dcp-prompts/overrides/iteration-nudge.md"
-        }
+        { "path": "profiles/haiku/opencode.jsonc", "target": "opencode.jsonc" },
+        { "path": "profiles/haiku/ocx.jsonc", "target": "ocx.jsonc" }
       ],
-      "dependencies": [
-        "ocx-bundle"
-      ]
+      "dependencies": ["ocx-bundle"]
     },
     {
       "name": "ocx-haiku-copilot",
       "type": "profile",
-      "description": "NAGAGroup's haiku copilot profile (GitHub Copilot, all haiku models)",
+      "description": "PicoCode — Haiku + GitHub Copilot profile",
       "files": [
-        {
-          "path": "profiles/haiku-copilot/opencode.jsonc",
-          "target": "opencode.jsonc"
-        },
-        {
-          "path": "profiles/haiku-copilot/ocx.jsonc",
-          "target": "ocx.jsonc"
-        },
-        {
-          "path": "profiles/haiku-copilot/dcp.jsonc",
-          "target": "dcp.jsonc"
-        },
-        {
-          "path": "profiles/haiku-copilot/dcp-prompts/overrides/system.md",
-          "target": "dcp-prompts/overrides/system.md"
-        },
-        {
-          "path": "profiles/haiku-copilot/dcp-prompts/overrides/context-limit-nudge.md",
-          "target": "dcp-prompts/overrides/context-limit-nudge.md"
-        },
-        {
-          "path": "profiles/haiku-copilot/dcp-prompts/overrides/turn-nudge.md",
-          "target": "dcp-prompts/overrides/turn-nudge.md"
-        },
-        {
-          "path": "profiles/haiku-copilot/dcp-prompts/overrides/iteration-nudge.md",
-          "target": "dcp-prompts/overrides/iteration-nudge.md"
-        }
+        { "path": "profiles/haiku-copilot/opencode.jsonc", "target": "opencode.jsonc" },
+        { "path": "profiles/haiku-copilot/ocx.jsonc", "target": "ocx.jsonc" }
       ],
-      "dependencies": [
-        "ocx-bundle"
-      ]
+      "dependencies": ["ocx-bundle"]
     },
     {
       "name": "ocx-free",
       "type": "profile",
-      "description": "NAGAGroup's free config (using Opencode Zen)",
+      "description": "PicoCode — free tier profile (OpenCode free models)",
       "files": [
-        {
-          "path": "profiles/free/opencode.jsonc",
-          "target": "opencode.jsonc"
-        },
-        {
-          "path": "profiles/free/ocx.jsonc",
-          "target": "ocx.jsonc"
-        },
-        {
-          "path": "profiles/free/dcp.jsonc",
-          "target": "dcp.jsonc"
-        },
-        {
-          "path": "profiles/free/dcp-prompts/overrides/system.md",
-          "target": "dcp-prompts/overrides/system.md"
-        },
-        {
-          "path": "profiles/free/dcp-prompts/overrides/context-limit-nudge.md",
-          "target": "dcp-prompts/overrides/context-limit-nudge.md"
-        },
-        {
-          "path": "profiles/free/dcp-prompts/overrides/turn-nudge.md",
-          "target": "dcp-prompts/overrides/turn-nudge.md"
-        },
-        {
-          "path": "profiles/free/dcp-prompts/overrides/iteration-nudge.md",
-          "target": "dcp-prompts/overrides/iteration-nudge.md"
-        }
+        { "path": "profiles/free/opencode.jsonc", "target": "opencode.jsonc" },
+        { "path": "profiles/free/ocx.jsonc", "target": "ocx.jsonc" }
       ],
-      "dependencies": [
-        "ocx-bundle"
-      ]
+      "dependencies": ["ocx-bundle"]
     },
     {
       "name": "ocx-ollama",
       "type": "profile",
-      "description": "NAGAGroup's Ollama local profile — run 'ollama cp <model> opencode-model' to set your model",
+      "description": "PicoCode — fully local Ollama profile (run 'ollama cp <model> opencode-model' to set your model)",
       "files": [
         { "path": "profiles/ollama/opencode.jsonc", "target": "opencode.jsonc" },
-        { "path": "profiles/ollama/ocx.jsonc", "target": "ocx.jsonc" },
-        { "path": "profiles/ollama/dcp.jsonc", "target": "dcp.jsonc" },
-        { "path": "profiles/ollama/dcp-prompts/overrides/system.md", "target": "dcp-prompts/overrides/system.md" },
-        { "path": "profiles/ollama/dcp-prompts/overrides/context-limit-nudge.md", "target": "dcp-prompts/overrides/context-limit-nudge.md" },
-        { "path": "profiles/ollama/dcp-prompts/overrides/turn-nudge.md", "target": "dcp-prompts/overrides/turn-nudge.md" },
-        { "path": "profiles/ollama/dcp-prompts/overrides/iteration-nudge.md", "target": "dcp-prompts/overrides/iteration-nudge.md" }
+        { "path": "profiles/ollama/ocx.jsonc", "target": "ocx.jsonc" }
       ],
       "dependencies": ["ocx-bundle"]
     }

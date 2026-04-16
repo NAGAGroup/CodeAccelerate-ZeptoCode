@@ -1,7 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "autoupdate": false,
-  "small_model": "opencode/big-pickle",
   "plugin": ["file://{env:HOME}/.config/opencode/plugins/planning-enforcement.js"],
   "default_agent": "headwrench",
   "agent": {
@@ -39,18 +38,6 @@
       "model": "opencode/big-pickle"
     },
     "autonomous-agent": {
-      "model": "opencode/big-pickle"
-    },
-    "dag-designer": {
-      "model": "opencode/big-pickle"
-    },
-    "dag-description-author": {
-      "model": "opencode/nemotron-3-super-free"
-    },
-    "dag-reviewer": {
-      "model": "opencode/big-pickle"
-    },
-    "dag-reviser": {
       "model": "opencode/big-pickle"
     },
     "compaction": {
