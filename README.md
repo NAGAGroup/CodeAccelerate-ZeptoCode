@@ -2,9 +2,9 @@
 
 > A multi-agent DAG planning and execution framework for [OpenCode](https://opencode.ai) — tuned to run on a 4-billion parameter model.
 
-**PicoCode turns OpenCode into a structured, autonomous engineering team.** You describe a goal. A planning agent decomposes it into a typed execution DAG — research phases, work phases, verification loops, decision gates. A specialized team of subagents executes it step by step, each with its own tools, permissions, and role. The whole thing runs locally on [gemma3:4b](https://ollama.com/library/gemma3) via Ollama. 4 billion weights. No cloud required.
+**PicoCode turns OpenCode into a structured, autonomous engineering team.** You describe a goal. A planning agent decomposes it into a typed execution DAG — research phases, work phases, verification loops, decision gates. A specialized team of subagents executes it step by step, each with its own tools, permissions, and role. The whole thing runs locally on [gemma4:4be](https://ollama.com/library/gemma4) via Ollama or llama-cpp. 4 billion weights. No cloud required.
 
-[![Demo](https://img.shields.io/badge/Watch_Demo-YouTube-red?style=flat-square&logo=youtube)](https://youtube.com/TODO)
+[![Demo](https://img.shields.io/badge/Watch_Demo-YouTube-red?style=flat-square&logo=youtube)](https://youtu.be/s7YQCgxsuO4)
 
 ---
 
@@ -48,7 +48,7 @@ docker run -d --name qdrant -p 6333:6333 qdrant/qdrant
 docker run -d --name searxng -p 8080:8080 searxng/searxng
 
 # Local models (Ollama) — pull the model used by the local profile
-ollama pull gemma3:4b
+ollama pull gemma4:4be
 ```
 
 ### 2. Install PicoCode via OCX
@@ -110,7 +110,7 @@ ocx oc -p naga-ollama
 
 ### Running with llama-cpp (recommended)
 
-[llama-cpp](https://github.com/ggerganov/llama.cpp) provides an OpenAI-compatible server and is the validated backend for PicoCode. The quantized gemma4 4B model runs well on a single consumer GPU or Apple Silicon:
+[llama-cpp](https://github.com/ggml-org/llama.cpp) provides an OpenAI-compatible server and is the validated backend for PicoCode. The quantized gemma4 4B model runs well on a single consumer GPU or Apple Silicon:
 
 ```bash
 llama-server \
@@ -187,7 +187,7 @@ A longer-term fix (per-session index isolation) is being investigated.
 
 Watch a full E2E planning and execution run on a real project:
 
-👉 **[YouTube Demo](https://youtube.com/TODO)**
+👉 **[YouTube Demo](https://youtu.be/s7YQCgxsuO4)**
 
 The demo shows the `naga-ollama` profile running on gemma3:4b — planning, execution, verification, and triage all running locally.
 
