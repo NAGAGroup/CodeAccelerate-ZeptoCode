@@ -1,26 +1,72 @@
 # CodeAccelerate-PicoCode
-
-> A multi-agent DAG planning and execution framework for [OpenCode](https://opencode.ai) — tuned to run on a 4-billion parameter model.
-
-**PicoCode turns OpenCode into a structured, autonomous engineering team.** You describe a goal. A planning agent decomposes it into a typed execution DAG — research phases, work phases, verification loops, decision gates. A specialized team of subagents executes it step by step, each with its own tools, permissions, and role. The whole thing runs locally on [gemma4:4be](https://ollama.com/library/gemma4) via Ollama or llama-cpp. 4 billion weights. No cloud required.
-
 [![Demo](https://img.shields.io/badge/Watch_Demo-YouTube-red?style=flat-square&logo=youtube)](https://youtu.be/s7YQCgxsuO4)
+
+> Autonomous multi-agent planning and execution for [OpenCode](https://opencode.ai) — running entirely on a 4-billion parameter model.
+
+You describe a goal. PicoCode plans it, executes it, and ships it — locally, privately, with no cloud APIs required.
 
 ---
 
-## Why PicoCode?
+## What makes PicoCode different
 
-Most AI coding setups give you a single agent that tries to do everything. PicoCode gives you a crew:
+**Agents build their own execution plans as structured DAGs — not flat task lists, not free-form reasoning chains.**
 
-- **headwrench** — the orchestrator. Follows the DAG, delegates to specialists, never touches code itself.
-- **context-scout / context-insurgent** — survey and deeply analyze your codebase before any work begins.
-- **junior-dev / documentation-expert** — implement code and docs changes, file edits only, no shell access.
-- **tailwrench** — verification, triage, shell commands, git. The only agent that runs commands.
-- **external-scout / deep-researcher** — web and docs research when external knowledge is needed.
+PicoCode uses a two-level planning system. A small, modular set of plan "phase types" (research, implement, decide, verify, exit) serves as the authoring vocabulary. A planning agent composes these phases into a typed execution DAG — with branches for decision-making, early exits for dead ends, merge points where paths converge, and user interaction gates where human judgment is needed. That DAG then compiles down to individual node prompts that specialist agents execute step by step.
 
-Plans are compiled into executable DAGs with typed phases (`work`, `web-search`, `deep-project-search-and-analysis`, `project-setup`, `agentic-decision-gate`, etc.), automatic retry loops, triage on failure, and optional commit checkpoints. The planner and the executor are separate sessions — planning produces a plan, execution activates it.
+This matters because:
 
-**The remarkable part:** all of this runs on `gemma4` (4 billion parameters) — a model that fits on a consumer GPU or Apple Silicon. Frontier providers (Anthropic, OpenAI, GitHub Copilot) are also supported for those who want maximum capability.
+- **Failure is a feature, not a bug.** Work phases include automatic verification and triage loops — but retries are bounded. When a phase exhausts its retry budget, it exits cleanly and documents exactly what failed and why. You come back from lunch and find the system stopped at a well-defined point, not a trail of hallucinated changes across your codebase. Even when things go wrong, the blast radius is scoped to a single phase — the plan as a whole can define a large feature, but no single failure corrupts more than the task that failed.
+- **Everything is auditable.** The DAG is a concrete artifact — you can inspect the plan before execution starts, trace exactly which path was taken during execution, and pinpoint where things went wrong after the fact. No black-box chains of thought that silently change your codebase.
+- **Plans are portable.** The DAG is model-agnostic. Plan with one model, execute with another. Plan with Sonnet for maximum reasoning quality, execute with gemma4 locally for zero cost. Or plan and execute both on gemma4 — it handles both.
+
+The whole system runs on [gemma4:4be](https://ollama.com/library/gemma4) via Ollama or llama.cpp. Four billion parameters. One consumer GPU.
+
+---
+
+## What it does
+
+```
+/plan-session build a C++ ASCII art library that prints to stdout
+```
+
+PicoCode will:
+
+1. **Survey** your codebase to understand structure and conventions
+2. **Research** external dependencies, frameworks, and integration approaches
+3. **Plan** an execution DAG with work items, decision gates, and exit points
+4. **Execute** each phase — delegating to specialist agents that edit code, run builds, search the web, and verify results
+5. **Recover** from failures automatically — verification failures trigger triage, which diagnoses and fixes before retrying
+
+---
+
+## The agent team
+
+| Agent | Role | Tools |
+|---|---|---|
+| **headwrench** | Orchestrator — follows the DAG, delegates to specialists, never touches code | `qdrant`, `task`, `question`, `next_step` |
+| **junior-dev** | Implements code changes via targeted file edits | `grepai`, `filesystem`, `web search` |
+| **tailwrench** | Verification expert, no edits, just checks work | `bash`, `read` |
+| **context-scout** | Broad codebase survey for orientation | `grepai`, `filesystem` |
+| **context-insurgent** | Deep, narrow analysis of specific code mechanisms | `grepai`, `filesystem` |
+| **external-scout** | Web research with confidence-tagged findings | `web search` |
+| **documentation-expert** | Writes and updates documentation | `grepai`, `filesystem` |
+
+---
+
+## Plan phases
+
+Plans are DAGs composed of typed phases:
+
+| Phase | Purpose |
+|---|---|
+| `implement-code` | Research, implement, verify, and retry — bundles pre-work survey, web search, deep analysis, setup, implementation, and verification into a single phase with automatic triage loops |
+| `author-documentation` | Self-explanatory |
+| `web-search` | External research to inform decisions — does not satisfy pre-work research within `work` phases |
+| `user-discussion` | Open-ended discussion with the user (linear, no branching) |
+| `user-decision-gate` | User chooses between execution branches |
+| `agentic-decision-gate` | Agent routes between branches based on evidence |
+| `write-notes` | Checkpoint — documents findings, decisions, context |
+| `early-exit` | Planned stopping point with handoff context |
 
 ---
 
@@ -28,10 +74,10 @@ Plans are compiled into executable DAGs with typed phases (`work`, `web-search`,
 
 - [OpenCode](https://opencode.ai) — `npm install -g opencode-ai`
 - [OCX](https://ocx.sh) — `npm install -g ocx` (OpenCode extension manager)
-- [grepai](https://yoanbernabeu.github.io/grepai/installation/) — semantic codebase search (MCP server used by all agents)
-- [Ollama](https://ollama.com) — required for grepai embeddings and the local profile
-- [Docker](https://docker.com) — required for Qdrant (session memory) and SearXNG (web search)
-- Node.js 18+ and `npx`
+- [grepai](https://yoanbernabeu.github.io/grepai/installation/) — semantic codebase search
+- [Ollama](https://ollama.com) — for grepai embeddings and the local profile
+- [Docker](https://docker.com) — for Qdrant (session memory) and SearXNG (web search)
+- Node.js 18+ with `npx`
 - Python with `uvx` (for the Qdrant MCP server)
 
 ---
@@ -41,158 +87,111 @@ Plans are compiled into executable DAGs with typed phases (`work`, `web-search`,
 ### 1. Start background services
 
 ```bash
-# Session memory (Qdrant)
 docker run -d --name qdrant -p 6333:6333 qdrant/qdrant
-
-# Web search (SearXNG)
 docker run -d --name searxng -p 8080:8080 searxng/searxng
-
-# Local models (Ollama) — pull the model used by the local profile
 ollama pull gemma4:4be
 ```
 
-### 2. Install PicoCode via OCX
+### 2. Install PicoCode
 
 ```bash
-# Initialize OCX global config
 npx ocx init --global
-
-# Add the NagaGroup registry
 npx ocx registry add https://ocx-registry.nagagroup.workers.dev --name naga-group --global
-
-# Install your chosen profile (see Profiles section below)
 npx ocx profile add naga-ollama --global --source naga-group/ocx-ollama
-
-# Install the planning plugin
 npx ocx add --global naga-group/ocx-planning-plugin
 ```
 
-### 3. Verify grepai is installed
-
-PicoCode manages grepai automatically — no manual init or watch commands needed. Just confirm the binary is available:
+### 3. Verify grepai
 
 ```bash
 grepai version
 ```
 
-When you start a planning or execution session, PicoCode will:
-1. Initialize the grepai index for the current project if it doesn't exist yet (`grepai init -p ollama --yes`)
-2. Start the background file watcher (`grepai watch --background`)
-
-The first session on a new project will take slightly longer while the index builds.
+PicoCode manages grepai automatically per project — no manual init or watch commands needed. The first session on a new project takes slightly longer while the index builds.
 
 ---
 
 ## Profiles
 
-Choose the profile that matches your setup. Install one (or more) using the `npx ocx profile add` command from step 2.
-
 | Profile | Source | Headwrench | Subagents |
 |---|---|---|---|
-| `naga-ollama` | `naga-group/ocx-ollama` | `gemma3:4b` (local) | `gemma3:4b` (local) |
+| **`naga-ollama`** | `naga-group/ocx-ollama` | gemma4:4be (local) | gemma4:4be (local) |
 | `naga` | `naga-group/ocx-default` | Claude Sonnet | Claude Haiku |
 | `naga-haiku` | `naga-group/ocx-haiku` | Claude Haiku | Claude Haiku |
 | `naga-copilot` | `naga-group/ocx-copilot` | GitHub Copilot | GitHub Copilot |
 | `naga-haiku-copilot` | `naga-group/ocx-haiku-copilot` | Claude Haiku | GitHub Copilot |
 | `naga-free` | `naga-group/ocx-free` | Free tier | Free tier |
 
-The `naga-ollama` profile is the flagship — fully local, fully private, no API keys needed.
+`naga-ollama` is the flagship — fully local, fully private, no API keys.
 
 ### Running with Ollama
 
-Pull the model and launch:
-
 ```bash
-ollama pull gemma3:4b
-export OPENCODE_OLLAMA_PORT=11434   # default Ollama port
+ollama pull gemma4:4be
+export OPENCODE_OLLAMA_PORT=11434
 ocx oc -p naga-ollama
 ```
 
-### Running with llama-cpp (recommended)
-
-[llama-cpp](https://github.com/ggml-org/llama.cpp) provides an OpenAI-compatible server and is the validated backend for PicoCode. The quantized gemma4 4B model runs well on a single consumer GPU or Apple Silicon:
+### Running with llama.cpp (recommended)
 
 ```bash
 llama-server \
   -hf unsloth/gemma-4-E4B-it-GGUF:Q8_0 \
-  --temp 0.8 \
-  --top-p 0.95 \
-  --top-k 64 \
+  --temp 0.8 --top-p 0.95 --top-k 64 \
   --alias opencode-model \
   --port 8000 \
   --reasoning on
 ```
-
-Then launch OpenCode pointing at the llama-server port:
 
 ```bash
 export OPENCODE_OLLAMA_PORT=8000
 ocx oc -p naga-ollama
 ```
 
-The `--alias opencode-model` flag makes the model name match what the `naga-ollama` profile expects. The `--reasoning on` flag enables gemma4's reasoning capability.
+The `--alias opencode-model` flag matches the profile's expected model name. The `--reasoning on` flag enables gemma4's built-in reasoning.
 
 ---
 
 ## Usage
 
-### Planning a task
-
-Start a planning session from any OpenCode conversation:
+### Plan
 
 ```
 /plan-session <describe what you want to build or fix>
 ```
 
-The planning DAG will guide headwrench through:
-1. Orienting to your codebase (context-scout)
-2. Web/docs research for any external dependencies
-3. Designing the execution plan (work items, decision gates, pre-work research)
-4. Compiling the plan into an executable DAG
+The planner will survey your codebase, research external dependencies, and produce an execution DAG. When planning completes, you'll see the plan diagram and an activation command.
 
-When planning completes, you'll be shown the plan diagram and given an activation command.
-
-### Executing a plan
+### Execute
 
 ```
 /activate-plan <plan-name>
 ```
 
-Execution runs through the compiled DAG automatically — each phase dispatches the appropriate subagent, verification loops retry on failure, and triage identifies root causes before fix attempts.
-
-### grepai
-
-grepai is managed automatically — no manual setup needed per project. PicoCode initializes the index and starts the background watcher when you start a session. You do not need to run `grepai init` or `grepai watch` yourself.
+Execution runs through the DAG automatically. Each phase dispatches the appropriate subagent. Verification failures trigger triage and retry.
 
 ---
 
-## Known Issues
+## Known issues
 
-### grepai index pollution
-
-grepai tracks file changes incrementally. Over time this accumulates stale entries that can pollute search results. If subagents start returning irrelevant or outdated codebase findings, reset the index:
+**grepai index pollution** — grepai's incremental tracking accumulates stale entries over time. If search results degrade, reset the index:
 
 ```bash
-cd your-project
-rm -rf .grepai/
+cd your-project && rm -rf .grepai/
 ```
 
-Then start a new planning or execution session — PicoCode will rebuild the index automatically.
-
-A longer-term fix (per-session index isolation) is being investigated.
+PicoCode rebuilds the index automatically on the next session. Per-session index isolation is being investigated.
 
 ---
 
 ## Demo
 
-Watch a full E2E planning and execution run on a real project:
+[![Watch the demo](https://img.shields.io/badge/Watch_Demo-YouTube-red?style=flat-square&logo=youtube)](https://youtu.be/s7YQCgxsuO4)
 
-👉 **[YouTube Demo](https://youtu.be/s7YQCgxsuO4)**
-
-The demo shows the `naga-ollama` profile running on gemma3:4b — planning, execution, verification, and triage all running locally.
+Full E2E planning and execution on gemma4:4be — planning, delegation, verification, triage, and recovery, all running locally.
 
 ---
 
 ## Part of CodeAccelerate
 
-PicoCode is part of the [CodeAccelerate](https://github.com/nagagroup) collection — a set of tools, libraries, and configurations published by NagaGroup.
+PicoCode is part of the [CodeAccelerate](https://github.com/nagagroup) collection — tools, libraries, and configurations published by NagaGroup.
