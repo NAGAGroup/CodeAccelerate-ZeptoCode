@@ -20,7 +20,7 @@ Most AI coding setups give you a single agent that tries to do everything. PicoC
 
 Plans are compiled into executable DAGs with typed phases (`work`, `web-search`, `deep-project-search-and-analysis`, `project-setup`, `agentic-decision-gate`, etc.), automatic retry loops, triage on failure, and optional commit checkpoints. The planner and the executor are separate sessions — planning produces a plan, execution activates it.
 
-**The remarkable part:** all of this runs on `gemma3:4b` — a model with 4 billion parameters that fits on a consumer GPU or Apple Silicon. Frontier providers (Anthropic, OpenAI, GitHub Copilot) are also supported for those who want maximum capability.
+**The remarkable part:** all of this runs on `gemma4` (4 billion parameters) — a model that fits on a consumer GPU or Apple Silicon. Frontier providers (Anthropic, OpenAI, GitHub Copilot) are also supported for those who want maximum capability.
 
 ---
 
@@ -98,12 +98,39 @@ Choose the profile that matches your setup. Install one (or more) using the `npx
 
 The `naga-ollama` profile is the flagship — fully local, fully private, no API keys needed.
 
-For the ollama profile, set the port via environment variable before launching OpenCode:
+### Running with Ollama
+
+Pull the model and launch:
 
 ```bash
+ollama pull gemma3:4b
 export OPENCODE_OLLAMA_PORT=11434   # default Ollama port
-opencode --profile naga-ollama
+ocx oc -p naga-ollama
 ```
+
+### Running with llama-cpp (recommended)
+
+[llama-cpp](https://github.com/ggerganov/llama.cpp) provides an OpenAI-compatible server and is the validated backend for PicoCode. The quantized gemma4 4B model runs well on a single consumer GPU or Apple Silicon:
+
+```bash
+llama-server \
+  -hf unsloth/gemma-4-E4B-it-GGUF:Q8_0 \
+  --temp 0.2 \
+  --top-p 0.95 \
+  --top-k 64 \
+  --alias opencode-model \
+  --port 8000 \
+  --reasoning on
+```
+
+Then launch OpenCode pointing at the llama-server port:
+
+```bash
+export OPENCODE_OLLAMA_PORT=8000
+ocx oc -p naga-ollama
+```
+
+The `--alias opencode-model` flag makes the model name match what the `naga-ollama` profile expects. The `--reasoning on` flag enables gemma4's reasoning capability.
 
 ---
 
