@@ -35,8 +35,8 @@
         // Node library: work nodes
         "planning/plan-session/node-library/junior-dev-work-item/node-spec.json",
         "planning/plan-session/node-library/junior-dev-work-item/prompt.md",
-        "planning/plan-session/node-library/junior-dev-fix-item/node-spec.json",
-        "planning/plan-session/node-library/junior-dev-fix-item/prompt.md",
+        "planning/plan-session/node-library/junior-dev-triage/node-spec.json",
+        "planning/plan-session/node-library/junior-dev-triage/prompt.md",
         "planning/plan-session/node-library/documentation-expert-work-item/node-spec.json",
         "planning/plan-session/node-library/documentation-expert-work-item/prompt.md",
         "planning/plan-session/node-library/documentation-expert-fix-item/node-spec.json",
