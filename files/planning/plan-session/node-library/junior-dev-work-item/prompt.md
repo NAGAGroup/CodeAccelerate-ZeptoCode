@@ -3,54 +3,21 @@
 **Subagent:** junior-dev
 **Goal:** {{GOAL}}
 
-## Hard Rules
-
-1. Write your prompt as instructions *to* junior-dev — treat it as a message to another agent.
+**Hard Rules**
+1. All instructions must be directed *to* junior-dev — actionable tasks, not commentary about the process.
 2. Call the `task` tool with `subagent_type=junior-dev`.
-3. Do not ask junior-dev to run build, test, or any verification commands — a dedicated verify step runs after this node.
+3. Explicitly forbid junior-dev from running any build, test, or verification commands — a dedicated verify step runs after this node.
 
-## Preflight Checks
+**Execution Steps:**
 
-```
-[preflight]
-subagent_type = junior-dev
-description = <3-5 word description of the task>
-```
+1. **Preflight:** Generate a concise 3-5 word `description` summarizing the implementation goal.
 
-## Prepare Delegation Protocol
+2. **Context Retrieval:** Use `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve prior research findings, established code conventions, architectural decisions, and project constraints.
 
-1. Call `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}`, as needed, to retrieve research findings, code conventions, architectural decisions, and constraints from prior steps.
-2. Draft a prompt for junior-dev that includes: the implementation goal, prior research context, and what to report back (what was implemented, files changed, decisions made).
-3. Include web search instructions verbatim: "Use web search tools as you work, e.g. API docs, build system integration, best practices, headers, user guides, etc. Never assume prior knowledge or provided context is enough. Verify everything."
+3. **Prompt Drafting:** Draft a complete prompt for junior-dev that includes: the implementation goal (`{{GOAL}}`), the retrieved prior context, a clearly specified return format (what was implemented, files changed, decisions made), and the following verbatim web search instruction: "Use web search tools as you work, e.g. API docs, build system integration, best practices, headers, user guides, etc. Never assume prior knowledge or provided context is enough. Verify everything."
 
-## Delegation Gate
+4. **Delegation Gate:** Before calling `task`, verify: prompt addresses junior-dev directly, web search instructions are included verbatim, retrieved context is integrated, return format is specified. Revise if any check fails, then call `task` with `subagent_type=junior-dev`.
 
-```toml
-[delegation-gate]
-prompt_addresses_subagent_directly = <true/false>
-prompt_includes_web_search_instructions = <true/false>
-prompt_includes_retrieved_context = <true/false>
-prompt_specifies_return_format = <true/false>
-gate_passed = <true/false>
-```
+5. **Note Taking:** Categorize the report into distinct notes. Call `qdrant_qdrant-store` with `collection_name={{PLAN_NAME}}` once per note. At minimum capture: what was implemented, files changed, decisions that affect verification. Add missing notes if needed — the verify step depends on them.
 
-If `gate_passed` is false, revise before delegating. Once it passes, call the `task` tool.
-
-## Note Taking
-
-Categorize the report into distinct notes. Call `qdrant_qdrant-store` with `collection_name={{PLAN_NAME}}` once per note.
-
-At minimum, capture: what was implemented, files changed, and any decisions that affect verification.
-
-```toml
-[note-gate]
-notes_stored = <list each note topic>
-implementation_captured = <true/false>
-gate_passed = <true/false>
-```
-
-If `gate_passed` is false, add missing notes before proceeding. The verify step depends on these notes.
-
-## How to Proceed
-
-Call `next_step`.
+6. Call `next_step`.

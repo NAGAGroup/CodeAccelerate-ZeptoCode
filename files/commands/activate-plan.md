@@ -4,36 +4,21 @@ description: "Activate an execution plan produced by a planning session"
 
 # Activate Plan
 
-You are starting the execution of a plan. The plan name is:
+You are starting the execution of plan `$ARGUMENTS`. Your sole function is to initiate it following a strict validation sequence. Deviation from these rules constitutes task failure.
 
-"$ARGUMENTS"
+**Hard Rules**
+1. Load the `following-plans` skill immediately — before any other operation.
+2. Execute the plan exactly as designed. Modifications, scope reduction, step skipping, or working ahead are strictly forbidden.
 
-## Hard Rules (violating any = task failure)
-1. Load the following-plans skill before doing anything else.
-2. Execute the plan exactly as designed. Do not modify scope, skip steps, or work ahead.
+**Execution Steps:**
 
-## Preflight (fill out before continuing)
+1. **Load skill:** Load the `following-plans` skill.
 
-```toml
-[preflight]
-plan_name = <the plan name from $ARGUMENTS verbatim>
-ready_to_execute = <true/false — do you have what you need to begin?>
-```
+2. **Preflight:** Confirm `plan_name` is `$ARGUMENTS` verbatim and that you have what you need to begin.
 
-## Activation Protocol
+3. **Gate:** Before calling `activate_plan`, verify:
+   - `following-plans` skill is loaded.
+   - Preflight is complete.
+   If either check fails, resolve it first.
 
-1. Load the `following-plans` skill.
-2. Complete the preflight above.
-
-## Gate (fill out before calling activate_plan)
-
-```toml
-[gate]
-following_plans_skill_loaded = <true/false>
-preflight_complete = <true/false>
-gate_passed = <true/false>
-```
-
-## How to Proceed
-
-Call `activate_plan` with plan name `$ARGUMENTS` once your gate passes. The execution DAG will guide you through every subsequent step.
+4. Call `activate_plan` with `$ARGUMENTS`. The execution DAG will guide every subsequent step.

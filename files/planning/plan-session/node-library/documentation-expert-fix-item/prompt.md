@@ -5,55 +5,19 @@
 
 A prior documentation attempt failed verification. Triage has identified the root cause.
 
-## Hard Rules
-
-1. Write your prompt as instructions *to* documentation-expert — treat it as a message to another agent.
+**Hard Rules**
+1. All output must be a direct instruction set *to* documentation-expert — not meta-commentary.
 2. Call the `task` tool with `subagent_type=documentation-expert`.
-3. Documentation-expert can only edit documentation files — never ask it to make code changes.
+3. Documentation-expert is limited to documentation files only — never instruct it to make code changes.
 
-## Preflight Checks
+**Execution Steps:**
 
-```
-[preflight]
-subagent_type = documentation-expert
-description = <3-5 word description of the task>
-```
+1. **Context Retrieval:** Use `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve: the triage root cause, prior fix attempts and why they failed, verified code facts as source-of-truth, and documentation conventions.
 
-## Prepare Delegation Protocol
+2. **Prompt Drafting:** Draft the prompt for documentation-expert. Include: the fix goal (`{{GOAL}}`), the root cause to address, verified technical facts as mandatory source-of-truth, what prior attempts already tried (to prevent repetition), return format requirements, and web search instructions (do not omit — documentation-expert can and should perform web searches when needed).
 
-1. Call `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}`, as needed, to retrieve the triage root cause, prior fix attempts, verified code facts, and documentation conventions.
-2. Draft a prompt for documentation-expert that includes: the fix goal, the root cause to address, verified technical facts as source-of-truth, what prior attempts already tried, and what to report back.
-3. Include instructions to perform web search as they work, if specified. They *can* perform their own web search, instructions to perform web search are valid. Do not exclude web search instructions.
+3. **Delegation Gate:** Before calling `task`, verify: prompt addresses documentation-expert directly, web search instructions are included, retrieved context is integrated, return format is specified, no code changes are requested. Revise if any check fails, then call `task` with `subagent_type=documentation-expert`.
 
-## Delegation Gate
+4. **Note Taking:** Categorize the report into distinct notes. Call `qdrant_qdrant-store` with `collection_name={{PLAN_NAME}}` once per note. At minimum capture: what was fixed, files changed, how the root cause was addressed. Add missing notes if needed — the verify step depends on them.
 
-```toml
-[delegation-gate]
-prompt_addresses_subagent_directly = <true/false>
-prompt_includes_web_search_instructions = <true/false>
-prompt_includes_retrieved_context = <true/false>
-prompt_specifies_return_format = <true/false>
-prompt_no_code_changes = <true/false — prompt does not ask documentation-expert to edit source code>
-gate_passed = <true/false>
-```
-
-If `gate_passed` is false, revise before delegating. Once it passes, call the `task` tool.
-
-## Note Taking
-
-Categorize the report into distinct notes. Call `qdrant_qdrant-store` with `collection_name={{PLAN_NAME}}` once per note.
-
-At minimum, capture: what was fixed, what files were changed, how the root cause was addressed.
-
-```toml
-[note-gate]
-notes_stored = <list each note topic>
-root_cause_addressed_captured = <true/false>
-gate_passed = <true/false>
-```
-
-If `gate_passed` is false, add missing notes. The verify step depends on these notes.
-
-## How to Proceed
-
-Call `next_step`.
+5. Call `next_step`.

@@ -4,38 +4,25 @@ description: "Start a planning session — explore, design, decompose, and write
 
 # Plan Session
 
-You are starting a planning session. The user's request is:
+You are starting a planning session for the following request: `$ARGUMENTS`
 
-"$ARGUMENTS"
+**Hard Rules**
+1. Load the `following-plans` skill immediately — before any other operation.
+2. Do not attempt to solve the request. This session decomposes it into a plan — it does not execute it.
 
-## Hard Rules (violating any = task failure)
-1. Load the following-plans skill before doing anything else.
-2. Do not attempt to solve the user's request. This session decomposes it into a plan, it does not execute it.
+**Execution Steps:**
 
-## Preflight
+1. **Load skill:** Load the `following-plans` skill. Failure to load constitutes immediate task failure.
 
-```toml
-[preflight]
-user_request = <summarize the user's request in your own words — lossless, don't omit details>
-user_involvement = <true/false — does the user want to be involved during planning or execution?>
-user_involvement_nature = <if true, describe the nature of the collaboration>
-constraints = <any constraints, exclusions, or scope limits mentioned in the request>
-```
+2. **Preflight:** Evaluate the user's request (`$ARGUMENTS`) and establish:
+   - `user_request`: A complete, lossless summary in your own words — retain all semantic details and constraints.
+   - `user_involvement`: true/false — does the user want to be involved during planning or execution?
+   - `user_involvement_nature`: If true, describe the specific nature of the collaboration required.
+   - `constraints`: All explicit limitations, exclusions, or scope boundaries in `$ARGUMENTS`.
 
-## Planning Session Protocol
+3. **Gate:** Before calling `plan_session`, verify:
+   - `following-plans` skill is loaded.
+   - All preflight fields are populated.
+   If either check fails, resolve it first.
 
-1. Load the `following-plans` skill.
-2. Complete the preflight above.
-
-## Gate
-
-```toml
-[gate]
-following_plans_skill_loaded = <true/false>
-preflight_complete = <true/false>
-gate_passed = <true/false>
-```
-
-## How to Proceed
-
-Call `plan_session` once your gate passes. The planning DAG will guide you through every subsequent step.
+4. Call `plan_session`. The planning DAG will guide every subsequent step.

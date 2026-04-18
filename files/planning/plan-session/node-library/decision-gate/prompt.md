@@ -3,30 +3,15 @@
 **Goal:** Route execution to the appropriate branch.
 **Decision question:** {{DESCRIPTION}}
 
-## Hard Rules
-
+**Hard Rules**
 1. Routing must be grounded in retrieved evidence — never guess.
 2. Call `get_branch_options` before `next_step`.
+3. Do not call `next_step` until the decision gate is fully resolved.
 
-## Retrieve Evidence and Decide
+**Execution Steps:**
 
-1. Call `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}`, as needed, targeting evidence relevant to the decision question above.
-2. Call `get_branch_options` to retrieve the available branch node IDs.
-3. Evaluate the retrieved evidence against the decision question and select the branch it supports.
+1. **Evidence Retrieval:** Use `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve evidence relevant to `{{DESCRIPTION}}`.
+2. **Branch Identification:** Call `get_branch_options` to obtain all available branch node IDs.
+3. **Evaluate and Decide:** Systematically compare the retrieved evidence against the decision question. Select the branch maximally supported by the evidence. Rationale must cite specific findings — not general reasoning.
 
-## Decision Gate
-
-```toml
-[decision-gate]
-evidence_summary = <key findings from retrieval that bear on this decision>
-decision = <your routing decision>
-rationale = <why this routing — reference specific findings, not general reasoning>
-branch_selected = <the branch node ID>
-gate_passed = <true/false>
-```
-
-Do not call `next_step` until `gate_passed = true`.
-
-## How to Proceed
-
-Call `next_step` with the branch node ID from your gate.
+Once the decision is made and the rationale is grounded in evidence, call `next_step` with the selected branch node ID.

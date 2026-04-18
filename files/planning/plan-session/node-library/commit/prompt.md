@@ -3,45 +3,19 @@
 **Subagent:** tailwrench
 **Goal:** Stage and commit the verified work from this phase.
 
-## Hard Rules
-
-1. Write your prompt as instructions *to* tailwrench — treat it as a message to another agent.
+**Hard Rules**
+1. Write your prompt as direct instructions *to* tailwrench — not commentary about it.
 2. Call the `task` tool with `subagent_type=tailwrench`.
 3. Stage only the specific files changed in this work phase — never all changed files indiscriminately.
 
-## Prepare Delegation
+**Execution Steps:**
 
-1. Call `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}`, as needed, to retrieve the implementation summary, files changed, and the goal this work implemented.
-2. Draft a prompt for tailwrench that includes: the specific files to stage (by name), a commit message reflecting what was done and why, and the constraint that only those files should be staged.
+1. **Context Retrieval:** Use `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve: the implementation summary, the exact list of files changed, and the goal this work implemented.
 
-## Delegation Gate
+2. **Prompt Drafting:** Draft a prompt *to* tailwrench that includes: the exact file names to stage (by name, not "stage all"), a commit message detailing what was done and why, and an explicit constraint that only those files are staged.
 
-```toml
-[delegation-gate]
-prompt_addresses_subagent_directly = <true/false>
-prompt_includes_retrieved_context = <true/false>
-prompt_specifies_return_format = <true/false>
-specific_files_listed = <true/false — prompt names specific files to stage, not "stage all changes">
-gate_passed = <true/false>
-```
+3. **Delegation Gate:** Before calling `task`, verify: prompt addresses tailwrench directly, retrieved context is integrated, return format is specified, specific files are named (not "stage all"). Revise if any check fails, then call `task` with `subagent_type=tailwrench`.
 
-If `gate_passed` is false, revise before delegating. Once it passes, call the `task` tool.
+4. **Note Taking:** Call `qdrant_qdrant-store` with `collection_name={{PLAN_NAME}}`. At minimum capture: commit success/failure, the commit message used, files staged. Correct missing notes before proceeding.
 
-## Note Taking
-
-Call `qdrant_qdrant-store` with `collection_name={{PLAN_NAME}}`.
-
-At minimum, capture: whether the commit succeeded, the commit message used, the files staged.
-
-```toml
-[note-gate]
-notes_stored = <list each note topic>
-commit_confirmed = <true/false>
-gate_passed = <true/false>
-```
-
-If `gate_passed` is false, correct that before proceeding.
-
-## How to Proceed
-
-Call `next_step`.
+5. Call `next_step`.

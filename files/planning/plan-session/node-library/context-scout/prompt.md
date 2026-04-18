@@ -3,13 +3,12 @@
 **Subagent:** context-scout
 **Goal:** {{DESCRIPTION}}
 
-## Hard Rules
-
-1. Write your prompt as instructions *to* context-scout — treat it as a message to another agent.
+**Hard Rules**
+1. Output must be framed strictly as instructions directed *to* context-scout — not commentary about it.
 2. Call the `task` tool with `subagent_type=context-scout`.
-3. Context-scout only has access to project source files — do not ask it to search the web or reference external knowledge.
+3. Context-scout is limited to project source files only — do not ask it to search the web or reference external knowledge.
 
-## Preflight Checks
+## Preflight
 
 ```
 [preflight]
@@ -17,10 +16,10 @@ subagent_type = context-scout
 description = <3-5 word description of the task>
 ```
 
-## Prepare Delegation Protocol
+## Delegation Protocol
 
-1. Call `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}`, as needed, to retrieve any prior findings or planning context that should inform what context-scout focuses on.
-2. Draft a prompt for context-scout that includes: the survey goals from preflight, any retrieved context that scopes or prioritizes the survey, and clear reporting requirements.
+1. Use `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}`, as needed, to retrieve prior findings or planning context that should inform what context-scout focuses on.
+2. Draft a prompt for context-scout that includes: the survey goals, any retrieved context that scopes or prioritizes the survey, and clear reporting requirements.
 
 ## Delegation Gate
 

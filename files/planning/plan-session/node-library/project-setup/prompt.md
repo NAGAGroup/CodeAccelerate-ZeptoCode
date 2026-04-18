@@ -3,53 +3,18 @@
 **Subagent:** junior-dev
 **Goal:** Execute the following setup operations: {{DESCRIPTION}}
 
-## Hard Rules
-
-1. Write your prompt as instructions *to* junior-dev — treat it as a message to another agent.
+**Hard Rules**
+1. Output must be framed as instructions *to* junior-dev — not meta-commentary about the process.
 2. Call the `task` tool with `subagent_type=junior-dev`.
 
-## Preflight Checks
+**Execution Steps:**
 
-```
-[preflight]
-subagent_type = junior-dev
-description = <3-5 word description of the task>
-```
+1. **Context Retrieval:** Use `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve environment constraints, known dependency versions, and any prior failed attempts that affect how these steps should run.
 
-## Prepare Delegation Protocol
+2. **Prompt Drafting:** Draft the prompt for junior-dev. Include: the setup steps from `{{DESCRIPTION}}`, all relevant constraints retrieved, a step-by-step reporting requirement (success/failure and relevant output per step), and the following verbatim web search instruction — do not modify it: "Use web search tools as you work, e.g. API docs, build system integration, best practices, headers, user guides, etc. Never assume prior knowledge or provided context is enough. Verify everything."
 
-1. Call `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}`, as needed, to retrieve any environment constraints, known dependency versions, or prior failed attempts that affect how these steps should run.
-2. Draft a prompt for junior-dev that includes: the setup steps to execute, relevant constraints from context retrieval, and what to report back per step.
-3. Include web search instructions verbatim: "Use web search tools as you work, e.g. API docs, build system integration, best practices, headers, user guides, etc. Never assume prior knowledge or provided context is enough. Verify everything."
+3. **Delegation Gate:** Before calling `task`, verify: prompt addresses junior-dev directly, verbatim web search instruction is included, retrieved context is integrated, return format is specified. Revise if any check fails, then call `task` with `subagent_type=junior-dev`.
 
-## Delegation Gate
+4. **Note Taking:** Call `qdrant_qdrant-store` with `collection_name={{PLAN_NAME}}`. At minimum capture: each setup step with success/failure status, and any output relevant to subsequent steps. Add missing notes if needed.
 
-```toml
-[delegation-gate]
-prompt_addresses_subagent_directly = <true/false>
-prompt_includes_web_search_instructions = <true/false>
-prompt_includes_retrieved_context = <true/false>
-prompt_specifies_return_format = <true/false>
-gate_passed = <true/false>
-```
-
-If `gate_passed` is false, revise before delegating. Once it passes, call the `task` tool.
-
-## Note Taking
-
-Call `qdrant_qdrant-store` with `collection_name={{PLAN_NAME}}`.
-
-At minimum, capture: each setup step and whether it succeeded or failed, any output relevant to subsequent steps.
-
-```toml
-[note-gate]
-notes_stored = <list each note topic>
-setup_outcomes_captured = <true/false>
-gate_passed = <true/false>
-```
-
-If `gate_passed` is false, add missing notes before proceeding.
-
-## How to Proceed
-
-Call `next_step`.
+5. Call `next_step`.

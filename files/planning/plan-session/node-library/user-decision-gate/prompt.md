@@ -3,30 +3,21 @@
 **Goal:** Present findings to the user and route based on their choice.
 **Decision question:** {{DESCRIPTION}}
 
-## Hard Rules
-
-1. Always surface relevant prior findings before presenting the choice — never ask the user to decide cold.
+**Hard Rules**
+1. Surface relevant prior findings before presenting the choice — never ask the user to decide cold.
 2. Describe what each branch means concretely — not just its ID.
-3. Call `get_branch_options` before the `question` tool.
+3. Tool sequence is strictly: `qdrant_qdrant-find` → `get_branch_options` → `question`.
+4. Do not call `next_step` until the user has chosen and the decision is recorded.
 
-## Retrieve Evidence and Present Choice
+**Execution Steps:**
 
-1. Call `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}`, as needed, targeting evidence relevant to the decision question above.
-2. Call `get_branch_options` to retrieve the available branch node IDs.
-3. Use the `question` tool to present the choice. Include: a plain-language summary of the relevant evidence, what each branch means for the execution ahead, and the decision question.
+1. **Evidence Retrieval:** Use `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve evidence relevant to `{{DESCRIPTION}}`.
 
-## Decision Gate
+2. **Branch Identification:** Call `get_branch_options` to obtain all available branch node IDs.
 
-```toml
-[decision-gate]
-evidence_surfaced = <key findings surfaced to the user>
-user_choice = <what the user chose>
-branch_selected = <the branch node ID matching the user's choice>
-gate_passed = <true/false>
-```
+3. **Present Choice:** Use the `question` tool. Include:
+   - A plain-language summary of the retrieved evidence.
+   - A concrete explanation of what each branch means for the execution ahead (not just the ID).
+   - The decision question (`{{DESCRIPTION}}`).
 
-Do not call `next_step` until `gate_passed = true`.
-
-## How to Proceed
-
-Call `next_step` with the branch node ID from your gate.
+4. Once the user chooses, call `next_step` with the matching branch node ID.

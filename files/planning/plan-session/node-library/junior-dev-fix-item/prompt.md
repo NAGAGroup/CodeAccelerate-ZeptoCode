@@ -5,56 +5,21 @@
 
 A prior implementation attempt failed verification. Triage has identified the root cause.
 
-## Hard Rules
-
-1. Write your prompt as instructions *to* junior-dev — treat it as a message to another agent.
+**Hard Rules**
+1. All output must be framed as direct instructions addressed *to* junior-dev — not meta-commentary.
 2. Call the `task` tool with `subagent_type=junior-dev`.
-3. Junior-dev can only make file edits — never ask it to run shell commands or bash operations.
+3. Junior-dev is limited to file edits only — never instruct it to run shell commands or bash operations.
 
-## Preflight Checks
+**Execution Steps:**
 
-```
-[preflight]
-subagent_type = junior-dev
-description = <3-5 word description of the task>
-```
+1. **Preflight:** Define a concise 3-5 word `description` of the fix goal.
 
-## Prepare Delegation Protocol
+2. **Context Retrieval:** Use `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve: the validated triage root cause, all prior fix attempts, the verification failure output, and relevant code conventions.
 
-1. Call `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}`, as needed, to retrieve the triage root cause, prior fix attempts, verification failure output, and any code conventions relevant to the fix.
-2. Draft a prompt for junior-dev that includes: the fix goal, the root cause to address, what prior attempts already tried (so it doesn't repeat them), relevant conventions, and what to report back.
-3. Include instructions to perform web search as they work, if specified. They *can* perform their own web search, instructions to perform web search are valid. Do not exclude web search instructions. Instructions to include, *verbatim* and *nothing more/nothing less*: "Use web search tools as you work, e.g. API docs, build system integration, best practices, headers, user guides, etc. Never assume prior knowledge or provided context is enough. Verify everything."
-4. Do not, under any circumstances, modify the web search instructions above if they are to be included.
+3. **Prompt Drafting:** Draft the prompt for junior-dev. Include: the fix goal (`{{GOAL}}`), the root cause and required correction, a list of prior failed attempts (to prevent repetition), retrieved code conventions, clear return format instructions, and the following verbatim web search instruction — do not modify it: "Use web search tools as you work, e.g. API docs, build system integration, best practices, headers, user guides, etc. Never assume prior knowledge or provided context is enough. Verify everything."
 
-## Delegation Gate
+4. **Delegation Gate:** Before calling `task`, verify: prompt addresses junior-dev directly, verbatim web search instruction is included, retrieved context is integrated, return format is specified, no shell commands are requested. Revise if any check fails, then call `task` with `subagent_type=junior-dev`.
 
-```toml
-[delegation-gate]
-prompt_addresses_subagent_directly = <true/false>
-prompt_includes_web_search_instructions = <true/false>
-prompt_includes_retrieved_context = <true/false>
-prompt_specifies_return_format = <true/false>
-prompt_no_shell_commands = <true/false — prompt does not ask junior-dev to run bash or shell commands>
-gate_passed = <true/false>
-```
+5. **Note Taking:** Categorize the report into distinct notes. Call `qdrant_qdrant-store` with `collection_name={{PLAN_NAME}}` once per note. At minimum capture: what was fixed, files changed, how the root cause was addressed. Add missing notes if needed — the verify step depends on them.
 
-If `gate_passed` is false, revise before delegating. Once it passes, call the `task` tool.
-
-## Note Taking
-
-Categorize the report into distinct notes. Call `qdrant_qdrant-store` with `collection_name={{PLAN_NAME}}` once per note.
-
-At minimum, capture: what was fixed, what files were changed, how the root cause was addressed.
-
-```toml
-[note-gate]
-notes_stored = <list each note topic>
-root_cause_addressed_captured = <true/false>
-gate_passed = <true/false>
-```
-
-If `gate_passed` is false, add missing notes. The verify step depends on these notes.
-
-## How to Proceed
-
-Call `next_step`.
+6. Call `next_step`.

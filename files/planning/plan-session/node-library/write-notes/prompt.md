@@ -3,34 +3,16 @@
 **Goal:** Store durable session notes covering this point in the plan.
 **What to document:** {{DESCRIPTION}}
 
-## Hard Rules
-
+**Hard Rules**
 1. Each note must be self-contained — a future agent reading only that note must fully understand it without surrounding context.
 2. One `qdrant_qdrant-store` call per distinct finding — never store as a monolithic block.
 
-## Preflight
+**Execution Steps:**
 
-```toml
-[preflight]
-documentation_target = <what this step must capture, in your own words based on {{DESCRIPTION}}>
-```
+1. **Context Retrieval:** Use `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve findings from prior steps relevant to what `{{DESCRIPTION}}` asks you to document.
 
-## Retrieve and Store
+2. **Store Notes:** For each distinct finding, decision, or outcome: call `qdrant_qdrant-store` with `collection_name={{PLAN_NAME}}`. Write each note as self-contained prose — a future agent reading only that note must achieve full contextual comprehension without reference to prior steps.
 
-1. Call `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}`, as needed, to retrieve findings from prior steps relevant to what {{DESCRIPTION}} asks you to document.
-2. For each distinct finding, decision, or outcome: call `qdrant_qdrant-store` with `collection_name={{PLAN_NAME}}`. Write each note as self-contained prose.
+3. **Self-Contained Check:** Review each stored note. If any note is shallow or would require surrounding context to understand, rewrite it before proceeding.
 
-## Gate
-
-```toml
-[gate]
-notes_stored = <list each note topic>
-self_contained_check = <true/false — would a future agent understand each note without reading prior steps>
-gate_passed = <true/false>
-```
-
-If `gate_passed` is false, rewrite shallow notes before proceeding.
-
-## How to Proceed
-
-Call `next_step`.
+4. Call `next_step`.

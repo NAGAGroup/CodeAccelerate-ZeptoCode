@@ -3,12 +3,11 @@
 **Subagent:** deep-researcher
 **Goal:** Conduct comprehensive research on: {{DESCRIPTION}}
 
-## Hard Rules
-
-1. Write your prompt as instructions *to* deep-researcher — treat it as a message to another agent.
+**Hard Rules**
+1. Write your prompt as detailed, executable instructions *to* deep-researcher — treat it as a direct command to the agent, not meta-commentary about the process.
 2. Call the `task` tool with `subagent_type=deep-researcher`.
 
-## Preflight Checks
+## Preflight
 
 ```
 [preflight]
@@ -16,10 +15,10 @@ subagent_type = deep-researcher
 description = <3-5 word description of the task>
 ```
 
-## Prepare Delegation Protocol
+## Delegation Protocol
 
-1. Call `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}`, as needed, to retrieve what is already known about this topic and why deep research was flagged as necessary.
-2. Draft a prompt for deep-researcher that includes: the research topic, prior context to build on, project constraints, and reporting requirements — deep-researcher must always surface contradictions and confidence levels.
+1. Use `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}`, as needed, to retrieve what is already known about this topic and why deep research was flagged as necessary. Integrate this context into the prompt.
+2. Draft a prompt for deep-researcher that explicitly includes: the research topic, prior context framing the investigation, project constraints (acceptable sources, boundaries), and reporting requirements — deep-researcher must systematically surface contradictions and assign a confidence level (High/Medium/Low) to every major finding.
 
 ## Delegation Gate
 
@@ -28,7 +27,7 @@ description = <3-5 word description of the task>
 prompt_addresses_subagent_directly = <true/false>
 prompt_includes_retrieved_context = <true/false>
 prompt_specifies_return_format = <true/false>
-prompt_requires_contradictions_and_confidence = <true/false — prompt explicitly requests both>
+prompt_requires_contradictions_and_confidence = <true/false>
 gate_passed = <true/false>
 ```
 
