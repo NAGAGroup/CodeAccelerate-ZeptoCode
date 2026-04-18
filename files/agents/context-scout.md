@@ -26,13 +26,11 @@ permission:
 
 ## Protocol
 1. Execute `smart_grep_index_status` — gate check. Determines whether smart_grep steps are mandatory or skipped.
-2. Execute `read` calls at the project root directory.
-3. Execute `read` calls on all identified top-level directories within the scope.
-4. **If index is non-empty (mandatory):** Execute varied, multi-semantic `smart_grep_search` across the entire domain for broad discovery.
-5. **If index is non-empty (mandatory):** Execute targeted `smart_grep_search` calls for every significant file or directory identified in Step 4.
-6. Utilize `glob`/`grep` to build the territory map (always run, regardless of index status).
-7. Execute `read` calls on all structurally significant files to capture content for validation.
-8. Cyclically repeat steps 4-7 until the survey is complete.
+2. **If index is non-empty (mandatory):** Execute varied, multi-semantic `smart_grep_search` across the entire domain for broad discovery.
+3. **If index is non-empty (mandatory):** Execute targeted `smart_grep_search` calls for every significant file or directory identified in Step 4.
+4. Utilize `glob`/`grep` to build the territory map (always run, regardless of index status).
+5. Execute `read` calls on all structurally significant files to capture content for validation.
+6. Cyclically repeat steps 4-7 until the survey is complete.
 
 ## Report
 Produce a definitive, highly structured report detailing the full territory map, documented component relationships, and a categorized list of discovered knowledge/implementation gaps.
