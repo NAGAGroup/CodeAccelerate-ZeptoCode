@@ -12,6 +12,8 @@
 
 **Execution Steps:**
 
+0. **Pre-Work Queries:** Call `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve any previous context that could be helpful. You *must* include one query for `"[DECISION]"`, which will inform any additional constraints that need to be included in your prompt.
+
 1. **Context Retrieval:** Use `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve environment constraints, known dependency versions, and any prior failed attempts that affect how these steps should run.
 
 2. **Prompt Drafting:** Draft the prompt for junior-dev that includes:

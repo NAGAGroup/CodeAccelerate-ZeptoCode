@@ -21,6 +21,8 @@ Tailwrench is restricted to command execution and output reading — it cannot e
 
 **Execution Steps:**
 
+0. **Pre-Work Queries:** Call `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve any previous context that could be helpful. You *must* include one query for `"[DECISION]"`, which will inform any additional constraints that need to be included in your prompt.
+
 1. **Prompt Drafting:** Construct a prompt *to* tailwrench that includes: what was implemented, the verify instructions and constraints above — treat both as pre-filled directives, and the required return format: commands run, full output, pass/fail verdict, and on failure — exact error output and which criteria failed.
 
 2. **Delegation Gate:** Before calling `task`, verify: prompt addresses tailwrench directly, any necessary context from previous steps is included, success criteria and constraints (if present) are stated, return format is specified. Revise if any check fails, then call `task` with `subagent_type=tailwrench`.

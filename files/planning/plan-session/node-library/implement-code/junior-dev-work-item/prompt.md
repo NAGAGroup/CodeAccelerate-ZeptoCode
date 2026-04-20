@@ -13,8 +13,12 @@
 **Hard Rules**
 1. All instructions must be directed *to* junior-dev — actionable tasks, not commentary about the process.
 2. Call the `task` tool with `subagent_type=junior-dev`.
+3. Implementation must adhere to the provided instructions and constraints. Any necessary code changes should be limited to the scope defined in the implementation instructions and must be explicitly approved in the prompt instructions.
+4. Decisions made throughout the plan *must* be adhered to. These are in addition to the constraints above. Both should be clearly stated in the prompt to tailwrench to ensure it can verify against them.
 
 **Execution Steps:**
+
+0. **Pre-Work Queries:** Call `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve any previous context that could be helpful. You *must* include one query for `"[DECISION]"`, which will inform any additional constraints that need to be included in your prompt.
 
 1. **Prompt Drafting:** Draft a clear, actionable prompt for junior-dev that includes:
 	- The implementation instructions above — treat them as pre-filled directives, not areas to generate or expand.

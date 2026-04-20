@@ -13,9 +13,11 @@ Verification failed. Junior-dev will investigate the root cause and apply a fix.
 1. Address the prompt as direct instructions *to* junior-dev — not commentary about the process.
 2. Call the `task` tool with `subagent_type=junior-dev`.
 3. The exact failed commands and verbatim error output must be in the prompt — junior-dev needs them to reproduce the failure.
-4. Decisions made throughout the plan *must* be adhered to. These are in addition to the constraints above.
+4. Decisions made throughout the plan *must* be adhered to. These are in addition to the constraints above. Both should be clearly stated in the prompt to tailwrench to ensure it can verify against them.
 
 **Execution Steps:**
+
+0. **Pre-Work Queries:** Call `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve any previous context that could be helpful. You *must* include one query for `"[DECISION]"`, which will inform any additional constraints that need to be included in your prompt.
 
 1. **Prompt Generation:** Draft a cohesive message *to* junior-dev that includes:
    - Instructions indicating the subagent should both triage and fix.
