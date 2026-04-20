@@ -1,5 +1,3 @@
-# User Collaboration
-
 **Discussion Topics:**
 {{DISCUSSION_TOPICS}}
 

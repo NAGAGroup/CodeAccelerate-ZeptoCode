@@ -1,5 +1,3 @@
-# Agentic Decision
-
 **Deliberation Instructions:**
 {{DELIBERATION_INSTRUCTIONS}}
 

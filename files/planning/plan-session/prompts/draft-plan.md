@@ -8,7 +8,7 @@ Do not activate the plan — this step only produces and locks in the plan.
 
 1. Every plan has exactly one entry point — the phase not referenced in any other phase's `next` field.
 2. Every phase must define `next`. Use `next = []` for leaf/exit phases.
-3.  **Branching:** Only phases explicitly marked with `is-branch = true` may have multiple entries in their `next` field. **Note: Branching defines separate, sequential execution pathways based on key decisions, not parallel work.**
+3. **Branching:** Only phases explicitly marked with `is-branch = true` may have multiple entries in their `next` field. **Note: Branching defines separate, sequential execution pathways based on key decisions, not parallel work.**
 4. If the plan involves external dependencies or resources at any point, then every work phase in the plan must include web search. Not just the phases that directly touch the dependency — every single one. Make sure to include web searches for both project setup (e.g. dependency integration, build system configuration, etc.) and source code implementation work (user guides, API docs, header/module import paths, etc.).
 5. Work through all steps completely before calling `create_plan`. Do not skip steps.
 
@@ -24,6 +24,8 @@ Do not activate the plan — this step only produces and locks in the plan.
 
 ## Step 2: Identify Work Permutations and Decisions
 
+**Meta-Instruction: Prioritize mapping all identified work permutations into the decision/branch structure before proceeding to Step 3.**
+
 Start with the work, not the decisions. Decisions exist to route between concrete work permutations.
 
 1. **Work permutations.** Based on the goal and findings, what are all the concrete ways this could be implemented? For each permutation, specify:
@@ -33,9 +35,10 @@ Start with the work, not the decisions. Decisions exist to route between concret
    - Constraints that must be maintained even during triage and retries
    - Planning context — why this permutation exists, what prior findings informed it
 
-2. **Decisions.** What determines which permutation gets executed?
-   - Who decides: user (`collaborate`) or agent (`deliberate`)
-   - Each decision branches. Name the branches after the concrete option they lead to.
+2. **Decisions and Discussion.** Identify phases where input is required. These can be general discussion/research phases (`collaborate`/`deliberate`) or explicit decision points.
+   - Who decides: user (`collaborate`) or agent (`deliberate`).
+   - **If the phase is an explicit decision point (i.e., it routes to separate, distinct work permutations), it must define a branch point.**
+   - **Crucially, a single decision phase can capture multiple topics or decisions in its `purpose` list.** If it defines a branch point, it must lead to separate, explicitly named pathways. Each named branch must represent a distinct, concrete work permutation.
 
 ## Step 3: Map to Plan Structure
 
@@ -66,8 +69,8 @@ deliberate(
   is-branch=true
 )
   → [threadpool-approach] implement-code(
-      setup=["configure CMakeLists.txt with std::jthread and <latch> support", "enable C++20"],
-      goal="implement thread pool dispatcher using std::jthread and lock-free queue"
+      setup=["configure CMakeLists.txt with std.jthread and <latch> support", "enable C++20"],
+      goal="implement thread pool dispatcher using std.jthread and lock-free queue"
     ) → finish
   → [coroutine-approach] implement-code(
       setup=["configure CMakeLists.txt with coroutine support flags", "enable C++20", "research C++20 coroutine task patterns and io_uring integration"],
@@ -126,6 +129,7 @@ collaborate(
    - Exactly one entry point.
    - Every phase has `next`.
    - Only phases with `is-branch = true` have multiple `next` entries.
+   - Collaboration or deliberation that does not define decisions, which *must* branch into separate named branches, may have `is-branch=false`.
    - If external dependencies are involved anywhere, every work phase has web search in its setup list.
    - Every work phase has verification instructions with concrete commands.
    - Every decision from Step 2 appears as a branching phase with named concrete branches.
