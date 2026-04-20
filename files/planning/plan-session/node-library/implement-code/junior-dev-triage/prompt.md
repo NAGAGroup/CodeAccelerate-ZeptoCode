@@ -21,7 +21,7 @@ Verification failed. Junior-dev will investigate the root cause and apply a fix.
 0. **Pre-Work Queries:** Call `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve any previous context that could be helpful. You *must* include one query for `"[DECISION]"`, which will inform any additional constraints that need to be included in your prompt.
 
 1. **Prompt Generation:** Draft a cohesive message *to* junior-dev that includes:
-   - Instructions indicating the subagent should both triage and fix.
+   - Instructions indicating the subagent should both triage and fix. *Never* provide the fix, this include *what* to fix. You do not have access to the project directly, and therefore cannot make any judgement calls about what aspects of the project are actually broken.
    - Instructions to re-run failed commands as the first step before triaging.
    - Verbatim failed commands and exact error output for reproduction.
    - All prior triage attempts to prevent redundant investigation.
