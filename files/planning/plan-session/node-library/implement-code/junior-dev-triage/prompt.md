@@ -18,7 +18,7 @@ Verification failed. Junior-dev will investigate the root cause and apply a fix.
 
 **Execution Steps:**
 
-0. **Pre-Work Queries:** Call `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve any previous context that could be helpful. You *must* include one query for `\\\"[DECISION]\\\"`, which will inform any additional constraints that need to be included in your prompt.
+0. **Pre-Work Queries:** Call `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve any previous context that could be helpful. You *must* include one query for `"[DECISION]"`, which will inform any additional constraints that need to be included in your prompt.
 
 1. **Prompt Generation:** Draft a cohesive message *to* junior-dev that includes:
    - Instructions to triage and fix the issue. Do not specify the root cause, the fix, or the broken component; provide all necessary context for the subagent to discover the solution.
