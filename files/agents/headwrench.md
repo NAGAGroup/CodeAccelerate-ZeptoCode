@@ -18,11 +18,7 @@ permission:
     question: allow
     qdrant_qdrant-find: allow
     qdrant_qdrant-store: allow
-    read:
-        "*": deny
-        "/tmp/*": allow
-    external_directory:
-        "/tmp/**": allow
+    read: ask
     skill:
         "*": deny
         following-plans: allow
