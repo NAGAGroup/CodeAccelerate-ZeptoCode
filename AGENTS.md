@@ -1,540 +1,278 @@
-# AGENTS.md — ZeptoCode Operational Guide
+# AGENTS.md — ZeptoCode Project Guide
 
-This file contains repo-specific guidance to help future OpenCode agent sessions avoid mistakes and ramp up quickly. Every section answers: "Would an agent miss this without help?"
+## What This Is
+ZeptoCode is a DAG-driven planning and execution plugin for [OpenCode](https://opencode.ai). It runs locally on a 4B parameter model and orchestrates multi-agent workflows as typed execution graphs.
 
----
-
-## Repository Overview
-
-**CodeAccelerate-ZeptoCode** is a multi-agent planning and execution framework for OpenCode. It decomposes goals into executable DAGs, delegates to specialized agents, and recovers from failures automatically.
-
-- **Build system**: Bun + OCX (OpenCode extension manager)
-- **Deployment**: Cloudflare Workers (Wrangler)
-- **Testing**: OpenCode HTTP API via localhost:4096 (naga-ollama profile)
-- **Project root directory**: `/home/jack/ZeptoCode/.worktrees/opencode-cfg`
+**Key repo fact**: This is a registry, plugins, and profiles repository—not an application. Code here is shipped to users via OCX (OpenCode Extension Manager).
 
 ---
 
-## Build & Deployment
+## Build System
 
-### Build (compiles TypeScript plugin, packages OCX components)
+### Single Command (All Platforms)
 ```bash
-bun run build
-# Produces: dist/
+npm run build
 ```
 
-**What it does:**
-1. Compiles `files/plugins/planning-enforcement.ts` → `files/plugins/planning-enforcement.js`
-2. Runs `bunx ocx build . --out dist`
-3. Output written to `dist/` (used by Vercel/Netlify and Wrangler)
+Does two things in order:
+1. Builds `files/plugins/planning-enforcement.ts` → `planning-enforcement.js` (Bun-bundled, Node target)
+2. Runs `ocx build . --out dist` to package all components
 
-**Critical:** Plugin TypeScript must compile to JavaScript before `ocx build` runs. If plugin changes fail the build, the entire registry becomes corrupted.
+**Build output location**: `./dist/` — contains JSON registry and component files.
 
-### Deploy
+**Deploy** (Cloudflare Workers):
 ```bash
-bun run deploy
-# Builds, then runs: wrangler deploy
+npm run deploy
 ```
 
-Deployment uses `wrangler.jsonc` and assets from `dist/`. After deploy, profiles must be refreshed locally:
+**Dev mode** (local hotload):
 ```bash
-bash scripts/update-profiles.sh
-# Clears local plugin cache, removes/re-adds all profiles
+npm run dev
 ```
 
 ---
 
-## Testing Infrastructure
-
-### Setup (starts OpenCode server on port 4096)
-```bash
-bun run test:setup
-# Starts: ocx oc -p naga-ollama serve --port 4096 (detached)
-# Polls http://localhost:4096/session until ready (max 20s)
-# Logs: /tmp/opencode-serve.log, /tmp/opencode-serve-err.log
-```
-
-**Do this first before any test run.** If it fails:
-- Check logs: `tail /tmp/opencode-serve.log`
-- Kill stray process: `pkill -f "ocx oc"`
-- Verify Qdrant and Ollama are running
-
-### Run Subagent Tests (agents × 3 trials)
-```bash
-bun run test:runner
-# Tests: context-scout, context-insurgent, junior-dev, documentation-expert, tailwrench, external-scout, autonomous-agent, headwrench, deep-researcher
-# Stores results: Qdrant collection "prompt-engineering-test-harness"
-```
-
-**Test flow:**
-1. Reads agent prompts from `test/agent-prompts.ts`
-2. POSTs realistic single-dispatch prompt to `/session` with `agentID` routing
-3. Captures full tool-call trajectory via SSE
-4. Measures agent behavior against permission frontmatter (not expected tool lists)
-
-**Output:** Agent behavior patterns in Qdrant. Use to validate system prompts before deployment.
-
-### Run E2E Planning DAG Tests (full /plan-session flow)
-```bash
-bun run test:e2e
-# Single planning session E2E (requires human monitoring)
-# Sessions captured: Qdrant collection "e2e-test-harness"
-```
-
-**Test flow:**
-1. Sends realistic goal to headwrench (via plan-session command expansion)
-2. Monitors multi-turn execution across all DAG nodes (session-overview → plan-success)
-3. Captures per-node tool sequences and verifies enforcement specs
-4. Simulates user decisions when user-decision-gate nodes are encountered
-5. Timeout: 5 min per turn, 60 min total session
-
-**Key timeouts (from `test/e2e-runner.ts`):**
-- `TURN_TIMEOUT_MS = 300_000` (5 min idle wait per turn)
-- `SESSION_TIMEOUT_MS = 3_600_000` (60 min total)
-
-**Known issue:** E2E tests require human interaction for decision gates. No CI automation currently.
-
----
-
-## Architecture & Directories
+## Project Structure
 
 ```
 files/
-├── agents/                    # Agent system prompts (YAML frontmatter + Markdown)
-│   ├── headwrench.md        # Orchestrator — delegates, never codes
-│   ├── junior-dev.md         # Implementer — edits code, runs builds, searches web
-│   ├── tailwrench.md         # Verification expert — no edits, just checks
-│   ├── context-scout.md      # Broad codebase survey
-│   ├── context-insurgent.md  # Deep, narrow code analysis
-│   ├── external-scout.md     # Web research with confidence tags
-│   ├── documentation-expert.md # Writes/updates docs
-│   └── ...
-│
-├── commands/                  # User-facing commands
-│   ├── plan-session.md        # /plan-session <goal> — decompose into DAG
-│   └── activate-plan.md       # /activate-plan <name> — execute DAG
-│
-├── skills/                    # Reusable instruction modules
-│   ├── planning-schema/      # Phase types, field schemas, naming conventions
-│   └── following-plans/      # How to execute DAG nodes
-│
-├── planning/plan-session/
-│   ├── plan.jsonl            # Planning DAG definition (phases as JSONL)
-│   ├── prompts/              # Planning orchestration prompts
-│   │   ├── session-overview.md
-│   │   ├── orientation-scout.md
-│   │   ├── draft-plan.md
-│   │   └── ...
-│   └── node-library/         # DAG node templates
-│       ├── junior-dev-work-item/      (implement code)
-│       ├── author-documentation/      (write docs)
-│       ├── verify-work-item/         (check work)
-│       ├── junior-dev-triage/        (diagnose failures)
-│       ├── context-scout/            (survey codebase)
-│       ├── context-insurgent/        (deep analysis)
-│       ├── external-scout/           (web research)
-│       ├── decision-gate/            (agentic branching)
-│       ├── user-decision-gate/       (human branching)
-│       ├── user-discussion/          (conversation)
-│       ├── write-notes/              (checkpoint/leaf)
-│       ├── project-setup/            (environment setup)
-│       └── commit/                   (git commit)
-│
-├── plugins/
-│   ├── planning-enforcement.ts  # Main plugin (TypeScript)
-│   ├── planning-enforcement.js  # Compiled output
-│   ├── modules/
-│   │   ├── tools/               # DAG execution tools
-│   │   └── hooks/               # Plugin lifecycle hooks
-│   └── ...
-│
-└── profiles/                    # Model configurations per profile
-    ├── ollama/                  # naga-ollama (gemma4:4be local)
-    ├── default/                 # naga (Claude Sonnet)
-    ├── haiku/                   # naga-haiku (Claude Haiku)
-    ├── copilot/                 # naga-copilot (GitHub Copilot)
-    ├── haiku-copilot/           # naga-haiku-copilot (hybrid)
-    └── free/                    # naga-free (Free tier APIs)
+├─ agents/                  # Agent role definitions (Markdown + YAML frontmatter)
+│  ├─ headwrench.md        # Main orchestrator (primary agent)
+│  ├─ junior-dev.md        # Code implementer
+│  ├─ tailwrench.md        # Verification specialist
+│  ├─ context-scout.md     # Broad codebase survey
+│  ├─ context-insurgent.md # Deep analysis of specific code
+│  ├─ external-scout.md    # Web research
+│  └─ documentation-expert.md
+├─ commands/               # Top-level user commands
+│  ├─ plan-session.md      # `/plan-session` — initiate planning
+│  └─ activate-plan.md     # `/activate-plan` — execute a plan
+├─ skills/                 # Reusable skill definitions
+│  ├─ following-plans/SKILL.md      # DAG-following protocol
+│  └─ planning-schema/SKILL.md      # Plan schema validation
+├─ planning/               # Execution DAGs and templates
+│  └─ plan-session/        # The master planning DAG
+│     ├─ plan.jsonl        # DAG definition (schema v4.0)
+│     ├─ prompts/          # Phase-level system prompts
+│     └─ node-library/     # Executable node specs (phases, stages, prompts)
+├─ profiles/               # Model/agent configuration profiles
+│  ├─ ollama/              # Fully local (gemma4 or custom Ollama model)
+│  ├─ default/             # Claude Sonnet + Haiku (Anthropic)
+│  ├─ copilot/             # GitHub Copilot
+│  ├─ haiku/               # All-Haiku
+│  ├─ haiku-copilot/       # Haiku + Copilot
+│  └─ free/                # OpenCode free models
+└─ plugins/               # Plugin source code
+   ├─ planning-enforcement.ts  # Main plugin entry point
+   ├─ dag-lifecycle.ts         # DAG copying & initialization
+   ├─ phase-io.ts            # JSONL DAG read/write
+   ├─ modules/               # Tool implementations & hooks
+   └─ package.json           # Bun dependencies (@opencode-ai/plugin, beautiful-mermaid)
 
-scripts/
-├── update-profiles.sh           # Refreshes profiles after deploy
-
-test/
-├── setup.ts                     # Starts OpenCode server (port 4096)
-├── runner.ts                    # Subagent test runner
-├── e2e-runner.ts                # E2E planning DAG test runner
-├── agent-prompts.ts             # Per-agent test prompts & success criteria
-├── e2e-prompts.ts               # Planning goal variations for E2E testing
-├── manifest.ts                  # Artifact discovery
-└── STRATEGY.md                  # Test harness iteration strategy
+registry.jsonc             # OCX registry manifest (defines what gets shipped)
+package.json               # Root build scripts (bun + wrangler)
+wrangler.jsonc             # Cloudflare Workers config
+netlify.toml / vercel.json # Alt deployment targets
 ```
 
 ---
 
-## Agent Permissions (YAML Frontmatter)
+## Critical Architecture Notes
 
-Every agent file (e.g., `files/agents/headwrench.md`) has a YAML permission block that constrains tool access. **This is the contract — agents must never exceed their declared permissions.** Violation causes execution failures.
+### DAG Format: `plan.jsonl` (Schema v4.0)
+- **JSONL format**: First line is metadata, subsequent lines are phase records.
+- **Metadata**: `{ schema_version: "4.0", name, description, ... }`
+- **Phase records**: `{ id, type, config, exits, ... }`
+- **Validation**: Checked by `phase-io.ts:detectSchemaVersion()` and phase-io read/write functions.
+- **Location in workflow**: Plans are copied from `files/planning/<plan-type>/plan.jsonl` → `.opencode/session-plans/<plan-type>-<sessionId>/plan.jsonl` at runtime.
 
-### Example: headwrench
-```yaml
-permission:
-    "*": deny
-    next_step: allow
-    activate_plan: allow
-    plan_session: allow
-    task: allow
-    question: allow
-    qdrant_qdrant-find: allow
-    qdrant_qdrant-store: allow
-    skill:
-        "*": deny
-        following-plans: allow
-        planning-schema: allow
-```
+### Execution Flow
+1. User runs `/plan-session <goal>`
+2. **headwrench** loads `plan.jsonl` and executes the DAG step by step
+3. Each phase can spawn sub-agents (**context-scout**, **junior-dev**, **tailwrench**, etc.)
+4. **Verification nodes** trigger triage & retry loops on failure
+5. User runs `/activate-plan <name>` to execute a planned DAG
 
-**headwrench** can:
-- Call `task` (delegate to subagents)
-- Call `question` (ask user)
-- Call planning tools (`plan_session`, `activate_plan`, `next_step`)
-- Load skills: `following-plans`, `planning-schema`
-- Read/write Qdrant
-
-**headwrench** cannot:
-- Edit code (no `write`, `edit`)
-- Run bash (no `bash`)
-- Search codebase (no `grep`, `smart_grep_*`)
-- Search web (no `searxng_*`)
-
-### Example: junior-dev
-```yaml
-permission:
-    "*": deny
-    bash: allow
-    grep: allow
-    read: allow
-    write: allow
-    edit: allow
-    glob: allow
-    smart_grep_search: allow
-    smart_grep_trace_callers: allow
-    smart_grep_trace_callees: allow
-    smart_grep_trace_graph: allow
-    smart_grep_index_status: allow
-    searxng_searxng_web_search: allow
-    searxng_web_url_read: allow
-    context7_resolve-library-id: allow
-    context7_query-docs: allow
-```
-
-**junior-dev** can:
-- Read/write/edit files
-- Search code (smart_grep, grep, glob)
-- Run builds/tests (bash)
-- Search web (searxng)
-- Trace callers/callees (smart_grep_trace_*)
-
-**junior-dev** cannot:
-- Call `task` (no delegation)
-- Modify agent configs
-- Load skills directly
+### Agent Model Assignment
+Configured in `files/profiles/<profile>/opencode.jsonc`:
+- **headwrench**: Sonnet (default) or local Ollama model — orchestrates the entire DAG
+- **junior-dev**: Haiku or Ollama — writes code
+- **tailwrench**: Sonnet or Ollama — verifies work
+- **context-scout / context-insurgent**: Haiku/Sonnet or Ollama — analyze code
+- **external-scout**: Haiku or Ollama — web research
+- **documentation-expert**: Haiku or Ollama — writes docs
 
 ---
 
-## Planning Schema (Phase Types)
+## Key Files to Touch (Selectively)
 
-Plans are DAGs of exactly four typed phases. Full schema in `files/skills/planning-schema/SKILL.md`.
+### To Add/Modify Agents
+Edit: `files/agents/<agent-name>.md`
+- YAML frontmatter + Markdown role definition
+- Permission blocks determine tool access
+- Changes require rebuild: `npm run build`
 
-### `implement-code`
-Researches, implements, verifies, and retries a code goal — bundled with auto-triage loops.
+### To Add/Modify Commands
+Edit: `files/commands/<command-name>.md`
+- Defines user-facing `/command` behavior
+- Requires rebuild
 
-```toml
-[[phases]]
-id = "my-feature"
-type = "implement-code"
-next = ["next-phase"]
-external-deps = "no"
-pre-work-project-survey = ["survey areas before work"]
-pre-work-web-search = ["research questions for pre-work"]
-pre-work-project-analysis = ["codebase analysis before work"]
-pre-work-project-setup = ["setup commands to run"]
-work-instructions = "detailed implementation steps"
-verification-instructions = "success criteria: compilation, tests, etc."
-commit = false
-```
+### To Modify the Planning DAG
+Edit: `files/planning/plan-session/plan.jsonl`
+- Schema v4.0 — do NOT hand-edit; use tooling to modify
+- Changes propagate on next `npm run build`
 
-`work-instructions` and `verification-instructions` must include references to pre-work and external dependencies — junior-dev won't have that context otherwise.
+### To Add New Plan Types
+1. Create `files/planning/<new-plan-type>/plan.jsonl` (schema v4.0)
+2. Add prompts to `files/planning/<new-plan-type>/prompts/`
+3. Add node library to `files/planning/<new-plan-type>/node-library/`
+4. Register in `registry.jsonc`
+5. Run `npm run build && npm run deploy`
 
-### `write-documentation`
-Delegates a documentation goal to documentation-expert, with optional bundled pre-documentation research.
-
-```toml
-[[phases]]
-id = "update-readme"
-type = "write-documentation"
-next = ["next-phase"]
-goal = "update README with new deployment instructions"
-pre-documentation-project-survey = ["..."]
-pre-documentation-web-search = ["..."]
-pre-documentation-project-analysis = ["..."]
-commit = false
-```
-
-### `user-discussion`
-Open discussion with the user, or a user-decision gate when `is-decision = "yes"`. Pre-discussion research bundled in.
-
-```toml
-[[phases]]
-id = "discuss-approach"
-type = "user-discussion"
-next = ["approach-a", "approach-b"]   # 2+ when is-decision = "yes"
-is-decision = "yes"
-discussion-topics = ["Which approach should we use — A or B?"]
-pre-discussion-project-survey = ["..."]
-pre-discussion-web-search = ["..."]
-pre-discussion-project-analysis = ["..."]
-```
-
-### `agentic-decision-making`
-Agent routes between branches based on evidence. Pre-decision research bundled in. Always branching.
-
-```toml
-[[phases]]
-id = "decide-framework"
-type = "agentic-decision-making"
-next = ["use-option-a", "use-option-b"]
-decision-factors = "Does the project already have X installed?"
-decision-outcomes = ["Yes — proceed with option A", "No — proceed with option B"]
-pre-decision-project-survey = ["..."]
-pre-decision-web-search = ["..."]
-pre-decision-project-analysis = ["..."]
-```
+### To Tweak Model Assignment
+Edit: `files/profiles/<profile>/opencode.jsonc`
+- Change `agent.<agent-name>.model` to a different model
+- Rebuild and redeploy to activate
 
 ---
 
-## Smart-Grep Index Lifecycle
+## Known Issues & Quirks
 
-### Initial Index Build
-When `grepai` first runs on a project, it builds an embeddings index in `.grepai/`:
-- **Takes time:** First `smart_grep_search` is slow (indexing)
-- **Happens once:** Subsequent sessions reuse the index
-- **Per-project:** Each project dir has its own `.grepai/`
-
-### Index Staleness
-Over time, stale entries accumulate in the index (deleted files, renamed symbols):
-- **Symptom:** `smart_grep_search` results degrade or return irrelevant files
-- **Fix:** Delete the index
-  ```bash
-  rm -rf .grepai/
-  ```
-- **Result:** Index rebuilds on next session (takes time, but fixes search quality)
-
-### Mandatory Smart-Grep Protocol (junior-dev)
-Per agent prompt `files/agents/junior-dev.md`:
-
-1. **Call `smart_grep_index_status` first** — determine if index is empty or populated
-2. **If populated:** Execute varied `smart_grep_search` queries, trace callers/callees with `smart_grep_trace_*`
-3. **If empty:** Skip semantic search, fall back to grep/glob
-4. **Before modifying code:** Always call `smart_grep_trace_callers` on the symbol being changed
-
----
-
-## Commands: /plan-session and /activate-plan
-
-### /plan-session
-Starts a planning session. Decomposes a goal into an executable DAG.
-
-```
-/plan-session build a C++ ASCII art library that prints to stdout
-```
-
-**Hard rules (from `files/commands/plan-session.md`):**
-1. Load `following-plans` skill immediately before anything else
-2. Do NOT attempt to solve the request — only decompose it into a plan
-3. Call `plan_session` tool (managed by headwrench)
-4. Planning DAG guides all subsequent steps
-
-### /activate-plan
-Executes a previously-planned DAG.
-
-```
-/activate-plan my-feature
-```
-
-**Hard rules (from `files/commands/activate-plan.md`):**
-1. Load `following-plans` skill immediately
-2. Execute the plan exactly as designed — no modifications, no skipping steps
-3. Call `activate_plan` tool with plan name
-4. Execution DAG guides all subsequent steps
-
----
-
-## Grepai Index Quirk
-
-**Issue:** Grepai's incremental tracking accumulates stale entries over time. After significant codebase changes, search quality degrades.
-
-**Symptom:** `smart_grep_search` returns outdated file paths or irrelevant results.
-
-**Fix:** Delete and rebuild
+### grepai Index Pollution
+If search results degrade on a user's machine:
 ```bash
-cd your-project
 rm -rf .grepai/
 ```
+ZeptoCode rebuilds the index automatically. Per-session isolation is in progress.
 
-Next session will rebuild the index automatically. Per-session index isolation is being investigated.
+### Model Selection for Ollama Profile
+- **Gemma 4 4B**: Reference model (slow but works)
+- **Recommended: Qwen 3 14B Q4_K_M** (~9–10 GB VRAM): Best balance of speed and reliability
+- **Minimum**: Qwen 2.5 14B (97.1% tool-calling F1)
+- **Do NOT use 70B+** — zero VRAM for KV cache
 
----
+See `files/profiles/ollama/opencode.jsonc` lines 24–40 for full model guide.
 
-## Test Commands Quick Reference
-
+### KV Cache Optimization (Ollama)
 ```bash
-# 1. Start OpenCode server (required for all tests)
-bun run test:setup
-
-# 2. Run subagent tests (agents × 3 trials)
-bun run test:runner
-
-# 3. Run E2E planning DAG test
-bun run test:e2e
-
-# Combined: setup + e2e
-bun run test:e2e:full
-
-# Combined: setup + subagent runner
-bun run test:full
+export OLLAMA_KV_CACHE_TYPE=q8_0
+export OLLAMA_FLASH_ATTENTION=1
+ollama serve
 ```
+Cuts context VRAM by ~50%.
 
-**Before running tests:** Ensure Qdrant and Ollama are running.
+### Temperature Settings for Ollama
+- **--temp 0.2, --top-p 0.95, --top-k 64** ensure tool calls are reliable and DAG is followed exactly
+- **--reasoning on** (gemma4 only) enables built-in chain-of-thought
+
+---
+
+## Deployment & Distribution
+
+### Build for Distribution
 ```bash
-# Check Qdrant
-curl http://localhost:6333/health
-
-# Check Ollama
-curl http://localhost:11434/api/tags
+npm run build
 ```
+Generates `./dist/` with:
+- Component files in `dist/components/`
+- Registry manifest `dist/index.json`
+- Static assets for `.well-known/`
 
----
-
-## Profiles & Model Selection
-
-Six profiles define different model combinations:
-
-| Profile | Orchestrator | Subagents | Use Case |
-|---------|---|---|---|
-| **naga-ollama** | gemma4:4be | gemma4:4be | Local, private, fully self-hosted |
-| **naga** | Claude Sonnet | Claude Haiku | Maximum reasoning + cost savings |
-| **naga-haiku** | Claude Haiku | Claude Haiku | Budget option, no API key for headwrench |
-| **naga-copilot** | GitHub Copilot | GitHub Copilot | Enterprise GitHub integration |
-| **naga-haiku-copilot** | Claude Haiku | GitHub Copilot | Hybrid cost/capability |
-| **naga-free** | Free tier API | Free tier API | Minimal cost, rate-limited |
-
-### Running with Ollama
+### Deploy to Cloudflare Workers
 ```bash
-ollama pull gemma4:4be
-export OPENCODE_OLLAMA_PORT=11434
-ocx oc -p naga-ollama
+npm run deploy
 ```
+- Requires `wrangler` auth
+- Publishes registry to OCX-compatible endpoint
+- User can then `ocx profile add` profiles from this registry
 
-### Running with llama.cpp (recommended for local inference)
+### Profile Registration (Post-Deploy)
+After `npm run deploy`, users run (approximately):
 ```bash
-llama-server \
-  -hf unsloth/gemma-4-E4B-it-GGUF:Q8_0 \
-  --temp 0.8 --top-p 0.95 --top-k 64 \
-  --alias opencode-model \
-  --port 8000 \
-  --reasoning on
+ocx profile add naga-ollama --global --source naga-group/ocx-ollama
 ```
 
-Then:
+To bulk-update all profiles on a machine, run the maintenance script:
 ```bash
-export OPENCODE_OLLAMA_PORT=8000
-ocx oc -p naga-ollama
+bash scripts/update-profiles.sh
 ```
+(Removes old profiles, re-adds from registry, clears cached plugin)
 
 ---
 
-## Plugin Build Pitfalls
+## Plugin Development Notes
 
-### TypeScript Compilation Required
-`planning-enforcement.js` is **auto-generated** from `files/plugins/planning-enforcement.ts`. Never edit the `.js` file directly.
+### When to Rebuild
+- **Always** after editing `files/agents/*.md` or `files/commands/*.md`
+- **Always** after editing `files/planning/*/plan.jsonl`
+- **Only if source code changes**: `files/plugins/*.ts`
 
-**Build process:**
-1. TypeScript checks: `bun build planning-enforcement.ts --outfile planning-enforcement.js`
-2. If compilation fails, the entire build fails — no partial output
-3. OCX build consumes the `.js` file
+### Plugin Entry Point
+`files/plugins/planning-enforcement.ts`:
+- Exports `PlanningEnforcementPlugin` async factory
+- Registers tools (session, navigation, planning, grepai)
+- Registers hooks (before, after, session-specific)
+- Manages DAG lifecycle and turn-level state
 
-### After Plugin Changes
-1. Fix the `.ts` source
-2. Run `bun run build` to regenerate `.js`
-3. Run `bun run deploy`
-4. Run `bash scripts/update-profiles.sh` to refresh profiles locally
+### Tool Modules
+Located in `files/plugins/modules/tools/`:
+- Session tools: DAG activation, plan management
+- Navigation tools: DAG traversal, step progression
+- Planning tools: DAG creation, schema validation
+- Grepai tools: Semantic search integration
 
-If profiles become corrupt after deploy:
+### Hooks
+Located in `files/plugins/modules/hooks/`:
+- `session-hooks.ts`: Session state, chat params, compacting
+- `tool-after-hooks/next-step.ts`: Post-tool DAG advancement
+- `before-hook`, `after-hook`: Global tool lifecycle
+
+---
+
+## When to NOT Edit
+
+- **Do not manually edit** `planning/plan-session/node-library/` unless you understand the schema — use tooling instead
+- **Do not create new agent files** without adding them to both `registry.jsonc` **and** profiles
+- **Do not hand-edit `dist/`** — always regenerate via `npm run build`
+- **Do not change `schema_version` in plan.jsonl** without updating all DAG read/write code
+
+---
+
+## Testing & Validation
+
+### Verify Build
 ```bash
-rm -rf ~/.config/opencode/plugins/planning-enforcement.js ~/.config/opencode/planning ~/.config/opencode/.ocx/
-npx ocx profile rm naga naga-copilot naga-free naga-haiku naga-haiku-copilot naga-ollama --global
-npx ocx profile add ... (re-add all profiles)
+npm run build
+# Check dist/ is populated
+ls -la dist/components/
 ```
 
----
+### Verify Config Syntax
+- OCX config files: validate against `$schema` URLs in `.jsonc` files
+- Plan JSONL: runs through `phase-io.ts` parsers on load
 
-## DAG Node Library Organization
-
-All DAG nodes live in `files/planning/plan-session/node-library/*/`:
-
-- **node-spec.json** — Execution metadata: skill requirements, enforcement array, next phase
-- **prompt.md** — Instruction template for the node (what the executor reads)
-
-### Enforcement Array (node-spec.json)
-```json
-{
-  "enforcement": ["task", "sequential-thinking_sequentialthinking"]
-}
-```
-
-Declares which tools **must** be called in order. Used by E2E tests to verify node behavior.
-
-### Node Prompt Structure
-Each prompt is freestanding — includes all context the executor needs (references to prior nodes, external dependencies, success criteria, etc.).
-
-**Common patterns:**
-- `junior-dev-work-item`: "Implement X based on the earlier research from context-scout"
-- `verify-work-item`: "Verify the changes from junior-dev-work-item by running tests"
-- `verify-triage`: "Diagnosis why verify-work-item failed and what to retry"
+### No Automated Test Suite
+- Config and DAG validity are checked at **runtime** by OpenCode
+- To test locally, you need a live OpenCode + Ollama/API setup
+- See README.md Setup section for prerequisites
 
 ---
 
-## Registry & Component Publishing
+## Useful Commands Reference
 
-All components are declared in `registry.jsonc`:
-
-- **ocx-planning-plugin** (plugin) — DAG execution plugin
-- **ocx-bundle** (bundle) — Agents, commands, skills
-- **ocx-default**, **ocx-ollama**, etc. (profiles) — Model + plugin+bundle combos
-
-**Publishing flow:**
-1. Update `registry.jsonc` (if adding new components)
-2. Run `bun run build` (compiles plugin + packages via OCX)
-3. Run `bun run deploy` (pushes to Cloudflare Workers)
-4. Users run `npx ocx profile add <profile-name>` to pull updates
+| Command | Purpose |
+|---------|---------|
+| `npm run build` | Bundle plugin + build dist |
+| `npm run deploy` | Deploy dist to Cloudflare Workers |
+| `npm run dev` | Local dev (hotload, not production) |
+| `bash scripts/update-profiles.sh` | Bulk refresh all installed profiles on user's machine |
+| `rm -rf .grepai/` | Reset grepai index (run in target project, not this repo) |
 
 ---
 
-## Key Reminders
+## Links
 
-1. **Grepai staleness**: If search quality degrades, `rm -rf .grepai/`
-2. **Plugin is TypeScript**: Changes to `planning-enforcement.ts` must compile
-3. **Test infrastructure is HTTP-based**: Runs via localhost:4096, not CLI
-4. **Permissions are contracts**: Agents cannot exceed YAML frontmatter declarations
-5. **Plans are portable**: Design with one model, execute with another
-6. **Skills must load first**: Both `/plan-session` and `/activate-plan` require `following-plans` skill
-7. **Enforcement specs matter**: E2E tests validate that nodes call expected tools in order
-
----
-
-## References
-
-- **README.md** — High-level overview, setup instructions, profiles
-- **test/STRATEGY.md** — Test harness philosophy and current iteration status
-- **files/skills/planning-schema/SKILL.md** — Complete phase type definitions
-- **files/skills/following-plans/SKILL.md** — How to execute DAG nodes
-- **files/planning/plan-session/node-library/CATALOGUE.md** — Index of all node types
+- **OpenCode**: https://opencode.ai
+- **OCX Registry Schema**: https://ocx.kdco.dev/schemas/v2/registry.json
+- **Demo**: https://youtu.be/s7YQCgxsuO4
+- **README**: Covers setup, profiles, usage, known issues in detail
