@@ -62,11 +62,10 @@
       "type": "local",
       "command": ["uvx", "mcp-server-qdrant"],
       "environment": {
-        "QDRANT_URL": "http://localhost:6333",
+        "QDRANT_LOCAL_PATH": ".opencode/qdrant",
         "EMBEDDING_MODEL": "sentence-transformers/all-MiniLM-L6-v2"
       },
-      "enabled": true,
-      "timeout": 30000
+      "enabled": true
     },
     // Self-hosted web search. Requires a running SearXNG instance on localhost:8080.
     // To spin up a local instance: docker run -d -p 8080:8080 searxng/searxng
