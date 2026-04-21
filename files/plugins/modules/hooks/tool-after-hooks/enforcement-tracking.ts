@@ -1,7 +1,7 @@
 import type { PluginDeps } from "../../deps";
 import { dagStatePath, readState, writeState, now } from "../../../state-io";
 import { isExempt } from "../../../constants";
-import { getToolName, isOptional } from "../../dag_engine/enforcement-utils";
+import { getToolName, isOptional, enforcementItemMatches } from "../../dag_engine/enforcement-utils";
 
 /**
  * Tracks enforcement progress for all tool calls not handled by a specific after-hook.
@@ -23,9 +23,13 @@ export async function handleEnforcementTrackingAfter(
   const node = state.node_map[state.current_node];
   if (!node || node.enforcement.length === 0) return false;
 
-  // Check if this tool matches the expected item at todo_index (accounting for "optional:" prefix).
-  const expectedToolName = getToolName(node.enforcement[state.todo_index] ?? "");
-  const isExpectedTodo = expectedToolName === input.tool;
+  // Check if this tool matches the expected item at todo_index (accounting for "optional:" prefix
+  // and "task:<subagent>" constraints). In the after-hook, args live on input.args.
+  const isExpectedTodo = enforcementItemMatches(
+    node.enforcement[state.todo_index] ?? "",
+    input.tool,
+    input.args?.subagent_type,
+  );
 
   // Exempt tools skip tracking unless they ARE the currently expected enforcement item.
   if (isExempt(input.tool) && !isExpectedTodo) return false;
@@ -35,12 +39,12 @@ export async function handleEnforcementTrackingAfter(
   let matchIndex = state.todo_index;
   while (
     matchIndex < node.enforcement.length &&
-    getToolName(node.enforcement[matchIndex]) !== input.tool
+    !enforcementItemMatches(node.enforcement[matchIndex], input.tool, input.args?.subagent_type)
   ) {
     matchIndex++;
   }
 
-  if (matchIndex < node.enforcement.length && getToolName(node.enforcement[matchIndex]) === input.tool) {
+  if (matchIndex < node.enforcement.length && enforcementItemMatches(node.enforcement[matchIndex], input.tool, input.args?.subagent_type)) {
     state.todo_index = matchIndex + 1;
     state.updated_at = now();
 

@@ -1,7 +1,7 @@
 import type { PluginDeps } from "../../deps";
 import { dagStatePath, readState } from "../../../state-io";
 import { isExempt } from "../../../constants";
-import { isOptional, getToolName, allRemainingOptional } from "../../dag_engine/enforcement-utils";
+import { isOptional, getToolName, allRemainingOptional, isTaskSubagent, getTaskSubagentName, enforcementItemMatches } from "../../dag_engine/enforcement-utils";
 
 /**
  * Generic enforcement handler — runs FIRST in the before-hook pipeline.
@@ -10,7 +10,7 @@ import { isOptional, getToolName, allRemainingOptional } from "../../dag_engine/
  */
 export async function handleEnforcementBefore(
   input: any,
-  _output: any,
+  output: any,
   deps: PluginDeps,
 ): Promise<boolean> {
   if (isExempt(input.tool)) return false;
@@ -32,7 +32,7 @@ export async function handleEnforcementBefore(
     if (
       pendingItem &&
       isOptional(pendingItem) &&
-      getToolName(pendingItem) === input.tool
+      enforcementItemMatches(pendingItem, input.tool, output.args?.subagent_type)
     ) {
       return false; // allow calling the optional item
     }
@@ -48,8 +48,32 @@ export async function handleEnforcementBefore(
 
   const currentToolName = getToolName(currentItem);
 
-  // Direct match at current position (optional or mandatory)
-  if (input.tool === currentToolName) return false;
+  // Direct match at current position (optional or mandatory).
+  // For task:<subagent> items, also validates the subagent_type parameter.
+  if (enforcementItemMatches(currentItem, input.tool, output.args?.subagent_type)) {
+    // If the tool name matches but subagent_type is wrong, give a targeted error.
+    if (isTaskSubagent(currentItem) && input.tool === "task") {
+      const expected = getTaskSubagentName(currentItem);
+      const actual = output.args?.subagent_type as string | undefined;
+      if (actual !== expected) {
+        throw new Error(
+          `[DAG BLOCKED] task called with subagent_type="${actual ?? "(none)"}" — ` +
+            `expected subagent_type="${expected}" for node "${state.current_node}".`,
+        );
+      }
+    }
+    return false;
+  }
+
+  // task tool called but subagent_type doesn't match the current task:<subagent> item.
+  if (isTaskSubagent(currentItem) && input.tool === "task") {
+    const expected = getTaskSubagentName(currentItem);
+    const actual = output.args?.subagent_type as string | undefined;
+    throw new Error(
+      `[DAG BLOCKED] task called with subagent_type="${actual ?? "(none)"}" — ` +
+        `expected subagent_type="${expected}" for node "${state.current_node}".`,
+    );
+  }
 
   if (isOptional(currentItem)) {
     // Current item is optional and the called tool isn't it — find the next mandatory item.
@@ -70,8 +94,8 @@ export async function handleEnforcementBefore(
       );
     }
 
-    const nextMandatoryTool = getToolName(node.enforcement[nextMandatoryIdx]);
-    if (input.tool === nextMandatoryTool) return false; // skipping the optional item
+    const nextMandatoryItem = node.enforcement[nextMandatoryIdx];
+    if (enforcementItemMatches(nextMandatoryItem, input.tool, output.args?.subagent_type)) return false; // skipping the optional item
   }
 
   throw new Error(

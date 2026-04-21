@@ -104236,7 +104236,8 @@ var exemptTools = [
   "recover_context",
   "next_step",
   "exit_plan",
-  "skill"
+  "skill",
+  "read"
 ];
 function isExempt(toolName) {
   return exemptTools.includes(toolName);
@@ -104878,6 +104879,18 @@ function getToolName(item) {
 }
 function allRemainingOptional(enforcement, fromIndex) {
   return enforcement.slice(fromIndex).every(isOptional);
+}
+function isTaskSubagent(item) {
+  return getToolName(item).startsWith("task:");
+}
+function getTaskSubagentName(item) {
+  return getToolName(item).slice("task:".length);
+}
+function enforcementItemMatches(item, toolName, subagentType) {
+  if (isTaskSubagent(item)) {
+    return toolName === "task" && subagentType === getTaskSubagentName(item);
+  }
+  return getToolName(item) === toolName;
 }
 
 // modules/tools/navigation-tools.ts
@@ -111001,7 +111014,7 @@ function createGrepaiTools(deps) {
 }
 
 // modules/hooks/tool-before-hooks/enforcement.ts
-async function handleEnforcementBefore(input, _output, deps) {
+async function handleEnforcementBefore(input, output, deps) {
   if (isExempt(input.tool))
     return false;
   const worktree = deps.resolveWorktree(deps.pluginCtx);
@@ -111016,7 +111029,7 @@ async function handleEnforcementBefore(input, _output, deps) {
     return false;
   if (state.status === "waiting_step") {
     const pendingItem = node.enforcement[state.todo_index];
-    if (pendingItem && isOptional(pendingItem) && getToolName(pendingItem) === input.tool) {
+    if (pendingItem && isOptional(pendingItem) && enforcementItemMatches(pendingItem, input.tool, output.args?.subagent_type)) {
       return false;
     }
     throw new Error(`[DAG BLOCKED] All required calls for node "${state.current_node}" are complete.
@@ -111026,8 +111039,21 @@ async function handleEnforcementBefore(input, _output, deps) {
   if (!currentItem)
     return false;
   const currentToolName = getToolName(currentItem);
-  if (input.tool === currentToolName)
+  if (enforcementItemMatches(currentItem, input.tool, output.args?.subagent_type)) {
+    if (isTaskSubagent(currentItem) && input.tool === "task") {
+      const expected = getTaskSubagentName(currentItem);
+      const actual = output.args?.subagent_type;
+      if (actual !== expected) {
+        throw new Error(`[DAG BLOCKED] task called with subagent_type="${actual ?? "(none)"}" — ` + `expected subagent_type="${expected}" for node "${state.current_node}".`);
+      }
+    }
     return false;
+  }
+  if (isTaskSubagent(currentItem) && input.tool === "task") {
+    const expected = getTaskSubagentName(currentItem);
+    const actual = output.args?.subagent_type;
+    throw new Error(`[DAG BLOCKED] task called with subagent_type="${actual ?? "(none)"}" — ` + `expected subagent_type="${expected}" for node "${state.current_node}".`);
+  }
   if (isOptional(currentItem)) {
     let nextMandatoryIdx = state.todo_index + 1;
     while (nextMandatoryIdx < node.enforcement.length && isOptional(node.enforcement[nextMandatoryIdx])) {
@@ -111037,8 +111063,8 @@ async function handleEnforcementBefore(input, _output, deps) {
       throw new Error(`[DAG BLOCKED] All required calls for node "${state.current_node}" are complete.
 ` + `Call next_step to advance to the next node.`);
     }
-    const nextMandatoryTool = getToolName(node.enforcement[nextMandatoryIdx]);
-    if (input.tool === nextMandatoryTool)
+    const nextMandatoryItem = node.enforcement[nextMandatoryIdx];
+    if (enforcementItemMatches(nextMandatoryItem, input.tool, output.args?.subagent_type))
       return false;
   }
   throw new Error(`[DAG BLOCKED] Cannot call ${input.tool} — prerequisite not met.
@@ -111148,15 +111174,14 @@ async function handleEnforcementTrackingAfter(input, _output, deps) {
   const node = state.node_map[state.current_node];
   if (!node || node.enforcement.length === 0)
     return false;
-  const expectedToolName = getToolName(node.enforcement[state.todo_index] ?? "");
-  const isExpectedTodo = expectedToolName === input.tool;
+  const isExpectedTodo = enforcementItemMatches(node.enforcement[state.todo_index] ?? "", input.tool, input.args?.subagent_type);
   if (isExempt(input.tool) && !isExpectedTodo)
     return false;
   let matchIndex = state.todo_index;
-  while (matchIndex < node.enforcement.length && getToolName(node.enforcement[matchIndex]) !== input.tool) {
+  while (matchIndex < node.enforcement.length && !enforcementItemMatches(node.enforcement[matchIndex], input.tool, input.args?.subagent_type)) {
     matchIndex++;
   }
-  if (matchIndex < node.enforcement.length && getToolName(node.enforcement[matchIndex]) === input.tool) {
+  if (matchIndex < node.enforcement.length && enforcementItemMatches(node.enforcement[matchIndex], input.tool, input.args?.subagent_type)) {
     state.todo_index = matchIndex + 1;
     state.updated_at = now();
     if (state.todo_index >= node.enforcement.length) {
