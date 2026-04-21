@@ -1,7 +1,7 @@
 [workspace]
 authors = ["Jack Myers <jackhmyers97@gmail.com>"]
 channels = ["conda-forge"]
-name = "tui-demo-project"
+name = "cpp-demo-project"
 platforms = ["linux-64"]
 version = "0.1.0"
 
@@ -15,7 +15,7 @@ build = { cmd = "cmake --build build/{{ preset }} -t {{ target }}", args = [
 ], depends-on = [
   "configure",
 ] }
-demo = { cmd = "./build/{{ preset }}/app/tui-demo", args = [
+demo = { cmd = "./build/{{ preset }}/app/cpp-demo", args = [
   { "arg" = "preset", "default" = "dev" },
 ], depends-on = [
   "build",

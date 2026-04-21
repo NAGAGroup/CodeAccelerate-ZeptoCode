@@ -32,7 +32,7 @@ pixi run configure release  # or specify a preset
 
 ```bash
 pixi run build              # builds all targets (dev preset)
-pixi run build release tui-demo  # specific preset and target
+pixi run build release cpp-demo  # specific preset and target
 ```
 
 ### Test

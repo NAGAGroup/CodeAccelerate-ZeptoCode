@@ -1,1 +1,1 @@
-add_executable(tui-demo src/main.cpp)
+add_executable(cpp-demo src/main.cpp)
