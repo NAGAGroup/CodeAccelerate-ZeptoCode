@@ -1,4 +1,4 @@
-{"id": "{{PHASE_ID}}-survey", "phase_type": "deliberate", "component": "context-scout", "children": ["{{PHASE_ID}}-ext"], "conditions": [], "inject": {}}
-{"id": "{{PHASE_ID}}-ext", "phase_type": "deliberate", "component": "external-scout", "children": ["{{PHASE_ID}}-analysis"], "conditions": [], "inject": {}}
-{"id": "{{PHASE_ID}}-analysis", "phase_type": "deliberate", "component": "context-insurgent", "children": ["{{PHASE_ID}}-deliberate"], "conditions": [], "inject": {}}
+{"id": "{{PHASE_ID}}-survey", "phase_type": "deliberate", "component": "context-scout", "children": ["{{PHASE_ID}}-ext"], "conditions": ["project-survey-instructions"], "inject": {}}
+{"id": "{{PHASE_ID}}-ext", "phase_type": "deliberate", "component": "external-scout", "children": ["{{PHASE_ID}}-analysis"], "conditions": ["web-search-instructions"], "inject": {}}
+{"id": "{{PHASE_ID}}-analysis", "phase_type": "deliberate", "component": "context-insurgent", "children": ["{{PHASE_ID}}-deliberate"], "conditions": ["project-analysis-instructions"], "inject": {}}
 {"id": "{{PHASE_ID}}-deliberate", "phase_type": "deliberate", "component": "deliberate", "children": ["EXIT"], "conditions": [], "inject": {}}

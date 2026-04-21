@@ -1,4 +1,4 @@
-{"id": "{{PHASE_ID}}-survey", "phase_type": "author-documentation", "component": "context-scout", "children": ["{{PHASE_ID}}-ext"], "conditions": [], "inject": {}}
-{"id": "{{PHASE_ID}}-ext", "phase_type": "author-documentation", "component": "external-scout", "children": ["{{PHASE_ID}}-analysis"], "conditions": [], "inject": {}}
-{"id": "{{PHASE_ID}}-analysis", "phase_type": "author-documentation", "component": "context-insurgent", "children": ["{{PHASE_ID}}-doc"], "conditions": [], "inject": {}}
+{"id": "{{PHASE_ID}}-survey", "phase_type": "author-documentation", "component": "context-scout", "children": ["{{PHASE_ID}}-ext"], "conditions": ["project-survey-instructions"], "inject": {}}
+{"id": "{{PHASE_ID}}-ext", "phase_type": "author-documentation", "component": "external-scout", "children": ["{{PHASE_ID}}-analysis"], "conditions": ["web-search-instructions"], "inject": {}}
+{"id": "{{PHASE_ID}}-analysis", "phase_type": "author-documentation", "component": "context-insurgent", "children": ["{{PHASE_ID}}-doc"], "conditions": ["project-analysis-instructions"], "inject": {}}
 {"id": "{{PHASE_ID}}-doc", "phase_type": "author-documentation", "component": "author-documentation", "children": ["EXIT"], "conditions": [], "inject": {}}

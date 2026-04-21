@@ -1,7 +1,7 @@
-{"id": "{{PHASE_ID}}-survey", "phase_type": "implement-code", "component": "context-scout", "children": ["{{PHASE_ID}}-ext"], "conditions": [], "inject": {}}
-{"id": "{{PHASE_ID}}-ext", "phase_type": "implement-code", "component": "external-scout", "children": ["{{PHASE_ID}}-analysis"], "conditions": [], "inject": {}}
-{"id": "{{PHASE_ID}}-analysis", "phase_type": "implement-code", "component": "context-insurgent", "children": ["{{PHASE_ID}}-presetup"], "conditions": [], "inject": {}}
-{"id": "{{PHASE_ID}}-presetup", "phase_type": "implement-code", "component": "project-setup", "children": ["{{PHASE_ID}}-work"], "conditions": [], "inject": {}}
+{"id": "{{PHASE_ID}}-survey", "phase_type": "implement-code", "component": "context-scout", "children": ["{{PHASE_ID}}-ext"], "conditions": ["project-survey-instructions"], "inject": {}}
+{"id": "{{PHASE_ID}}-ext", "phase_type": "implement-code", "component": "external-scout", "children": ["{{PHASE_ID}}-analysis"], "conditions": ["web-search-instructions"], "inject": {}}
+{"id": "{{PHASE_ID}}-analysis", "phase_type": "implement-code", "component": "context-insurgent", "children": ["{{PHASE_ID}}-presetup"], "conditions": ["project-analysis-instructions"], "inject": {}}
+{"id": "{{PHASE_ID}}-presetup", "phase_type": "implement-code", "component": "project-setup", "children": ["{{PHASE_ID}}-work"], "conditions": ["setup-instructions"], "inject": {}}
 {"id": "{{PHASE_ID}}-work", "phase_type": "implement-code", "component": "junior-dev-work-item", "children": ["{{PHASE_ID}}-verify-0"], "conditions": [], "inject": {}}
 {"id": "{{PHASE_ID}}-verify-0", "phase_type": "implement-code", "component": "verify-work-item", "children": ["EXIT", "{{PHASE_ID}}-triage-1"], "conditions": [], "inject": {}}
 {"id": "{{PHASE_ID}}-triage-1", "phase_type": "implement-code", "component": "junior-dev-triage", "children": ["{{PHASE_ID}}-verify-1"], "conditions": [], "inject": {}}
