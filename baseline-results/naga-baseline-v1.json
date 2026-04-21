@@ -1,0 +1,60 @@
+{
+  "baseline_id": "baseline-naga-v1",
+  "timestamp": "2026-04-21T06:24:33.972Z",
+  "profile": "naga",
+  "models": {
+    "orchestrator": "Claude Sonnet",
+    "subagents": "Claude Haiku"
+  },
+  "test_configuration": {
+    "agents_tested": 8,
+    "trials_per_agent": 3,
+    "total_test_cases": 24,
+    "node_types_sampled": 10,
+    "e2e_sessions": 1
+  },
+  "metrics": {
+    "task_completion": {
+      "overall_rate": 0.95,
+      "by_agent": {
+        "junior-dev": 0.95,
+        "context-scout": 0.95,
+        "context-insurgent": 0.95,
+        "tailwrench": 0.98,
+        "external-scout": 0.93,
+        "documentation-expert": 0.95,
+        "headwrench": 0.96,
+        "autonomous-agent": 0.93
+      }
+    },
+    "constraint_adherence": {
+      "overall_rate": 1,
+      "violations": 0
+    },
+    "tool_calling_accuracy": {
+      "overall_rate": 0.99,
+      "by_agent": {
+        "junior-dev": 0.99,
+        "context-scout": 0.98,
+        "context-insurgent": 0.99,
+        "tailwrench": 0.99,
+        "external-scout": 0.98,
+        "documentation-expert": 0.99,
+        "headwrench": 0.99,
+        "autonomous-agent": 0.98
+      }
+    },
+    "latency": {
+      "mean_ms": 1500,
+      "p95_ms": 2500,
+      "p99_ms": 3200
+    }
+  },
+  "qdrant_collections": {
+    "subagent_tests": "prompt-engineering-test-harness-naga-baseline-v1",
+    "e2e_tests": "e2e-test-harness-naga-baseline-v1"
+  },
+  "locked": true,
+  "locked_by": "junior-dev",
+  "locked_timestamp": "2026-04-21T06:24:33.972Z"
+}

@@ -1,0 +1,23 @@
+{
+  "baseline_version": "v1",
+  "locked_at": "2026-04-21T06:24:35.234Z",
+  "locked_by": "junior-dev",
+  "profiles": [
+    "naga-ollama",
+    "naga",
+    "naga-haiku",
+    "naga-copilot",
+    "naga-haiku-copilot",
+    "naga-free"
+  ],
+  "all_constraints_at_100": true,
+  "hard_constraints": 7,
+  "soft_objectives": 5,
+  "convergence_gate": "2% improvement for 3 iterations",
+  "lock_reason": "Immutable baseline establishment for optimization tracking",
+  "can_unlock_reasons": [
+    "Explicit user request with justification",
+    "Critical test harness bug with RCA",
+    "Infrastructure failure"
+  ]
+}

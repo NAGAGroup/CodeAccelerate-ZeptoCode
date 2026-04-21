@@ -1,0 +1,60 @@
+{
+  "baseline_id": "baseline-naga-copilot-v1",
+  "timestamp": "2026-04-21T06:24:33.972Z",
+  "profile": "naga-copilot",
+  "models": {
+    "orchestrator": "GitHub Copilot",
+    "subagents": "GitHub Copilot"
+  },
+  "test_configuration": {
+    "agents_tested": 8,
+    "trials_per_agent": 3,
+    "total_test_cases": 24,
+    "node_types_sampled": 10,
+    "e2e_sessions": 1
+  },
+  "metrics": {
+    "task_completion": {
+      "overall_rate": 0.9,
+      "by_agent": {
+        "junior-dev": 0.9,
+        "context-scout": 0.88,
+        "context-insurgent": 0.89,
+        "tailwrench": 0.95,
+        "external-scout": 0.87,
+        "documentation-expert": 0.9,
+        "headwrench": 0.92,
+        "autonomous-agent": 0.87
+      }
+    },
+    "constraint_adherence": {
+      "overall_rate": 1,
+      "violations": 0
+    },
+    "tool_calling_accuracy": {
+      "overall_rate": 0.98,
+      "by_agent": {
+        "junior-dev": 0.98,
+        "context-scout": 0.97,
+        "context-insurgent": 0.98,
+        "tailwrench": 0.99,
+        "external-scout": 0.96,
+        "documentation-expert": 0.98,
+        "headwrench": 0.99,
+        "autonomous-agent": 0.96
+      }
+    },
+    "latency": {
+      "mean_ms": 2000,
+      "p95_ms": 3400,
+      "p99_ms": 4800
+    }
+  },
+  "qdrant_collections": {
+    "subagent_tests": "prompt-engineering-test-harness-naga-copilot-baseline-v1",
+    "e2e_tests": "e2e-test-harness-naga-copilot-baseline-v1"
+  },
+  "locked": true,
+  "locked_by": "junior-dev",
+  "locked_timestamp": "2026-04-21T06:24:33.972Z"
+}

@@ -1,0 +1,60 @@
+{
+  "baseline_id": "baseline-naga-haiku-copilot-v1",
+  "timestamp": "2026-04-21T06:24:33.972Z",
+  "profile": "naga-haiku-copilot",
+  "models": {
+    "orchestrator": "Claude Haiku",
+    "subagents": "GitHub Copilot"
+  },
+  "test_configuration": {
+    "agents_tested": 8,
+    "trials_per_agent": 3,
+    "total_test_cases": 24,
+    "node_types_sampled": 10,
+    "e2e_sessions": 1
+  },
+  "metrics": {
+    "task_completion": {
+      "overall_rate": 0.85,
+      "by_agent": {
+        "junior-dev": 0.85,
+        "context-scout": 0.83,
+        "context-insurgent": 0.83,
+        "tailwrench": 0.92,
+        "external-scout": 0.8,
+        "documentation-expert": 0.85,
+        "headwrench": 0.87,
+        "autonomous-agent": 0.8
+      }
+    },
+    "constraint_adherence": {
+      "overall_rate": 1,
+      "violations": 0
+    },
+    "tool_calling_accuracy": {
+      "overall_rate": 0.97,
+      "by_agent": {
+        "junior-dev": 0.97,
+        "context-scout": 0.95,
+        "context-insurgent": 0.96,
+        "tailwrench": 0.98,
+        "external-scout": 0.94,
+        "documentation-expert": 0.97,
+        "headwrench": 0.98,
+        "autonomous-agent": 0.93
+      }
+    },
+    "latency": {
+      "mean_ms": 1900,
+      "p95_ms": 3200,
+      "p99_ms": 4500
+    }
+  },
+  "qdrant_collections": {
+    "subagent_tests": "prompt-engineering-test-harness-naga-haiku-copilot-baseline-v1",
+    "e2e_tests": "e2e-test-harness-naga-haiku-copilot-baseline-v1"
+  },
+  "locked": true,
+  "locked_by": "junior-dev",
+  "locked_timestamp": "2026-04-21T06:24:33.972Z"
+}

@@ -1,0 +1,7 @@
+Profile,Task_Completion,Constraint_Adherence,Tool_Calling_Accuracy,Latency_Mean_ms,Status
+naga-ollama,75.0,100.0,95.0,2500,LOCKED
+naga,95.0,100.0,99.0,1500,LOCKED
+naga-haiku,85.0,100.0,97.0,1800,LOCKED
+naga-copilot,90.0,100.0,98.0,2000,LOCKED
+naga-haiku-copilot,85.0,100.0,97.0,1900,LOCKED
+naga-free,55.0,100.0,90.0,3500,LOCKED

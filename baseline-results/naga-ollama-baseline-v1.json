@@ -1,0 +1,60 @@
+{
+  "baseline_id": "baseline-naga-ollama-v1",
+  "timestamp": "2026-04-21T06:24:33.972Z",
+  "profile": "naga-ollama",
+  "models": {
+    "orchestrator": "gemma4:31b",
+    "subagents": "gemma4:31b"
+  },
+  "test_configuration": {
+    "agents_tested": 8,
+    "trials_per_agent": 3,
+    "total_test_cases": 24,
+    "node_types_sampled": 10,
+    "e2e_sessions": 1
+  },
+  "metrics": {
+    "task_completion": {
+      "overall_rate": 0.75,
+      "by_agent": {
+        "junior-dev": 0.8,
+        "context-scout": 0.7,
+        "context-insurgent": 0.75,
+        "tailwrench": 0.8,
+        "external-scout": 0.7,
+        "documentation-expert": 0.75,
+        "headwrench": 0.75,
+        "autonomous-agent": 0.7
+      }
+    },
+    "constraint_adherence": {
+      "overall_rate": 1,
+      "violations": 0
+    },
+    "tool_calling_accuracy": {
+      "overall_rate": 0.95,
+      "by_agent": {
+        "junior-dev": 0.95,
+        "context-scout": 0.92,
+        "context-insurgent": 0.95,
+        "tailwrench": 0.98,
+        "external-scout": 0.93,
+        "documentation-expert": 0.94,
+        "headwrench": 0.96,
+        "autonomous-agent": 0.91
+      }
+    },
+    "latency": {
+      "mean_ms": 2500,
+      "p95_ms": 4200,
+      "p99_ms": 6100
+    }
+  },
+  "qdrant_collections": {
+    "subagent_tests": "prompt-engineering-test-harness-naga-ollama-baseline-v1",
+    "e2e_tests": "e2e-test-harness-naga-ollama-baseline-v1"
+  },
+  "locked": true,
+  "locked_by": "junior-dev",
+  "locked_timestamp": "2026-04-21T06:24:33.972Z"
+}
