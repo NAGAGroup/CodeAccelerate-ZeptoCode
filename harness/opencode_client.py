@@ -152,8 +152,11 @@ class OpenCodeClient:
                                 collected.append(props)
                                 last_content = time.time()
                             elif t == "session.idle":
-                                logger.info(f"session.idle for {session_id}")
-                                break
+                                # The plugin may inject another prompt on session.idle
+                                # (next DAG node). Reset the timer and keep listening —
+                                # true completion is silence for idle_timeout seconds.
+                                logger.info(f"session.idle for {session_id} — resetting idle timer")
+                                last_content = time.time()
                             elif t == "session.error":
                                 logger.warning(f"session.error for {session_id}: {props}")
                                 break
