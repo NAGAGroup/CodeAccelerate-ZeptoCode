@@ -18,7 +18,7 @@ permission:
     question: allow
     qdrant_qdrant-find: allow
     qdrant_qdrant-store: allow
-    read: ask
+    read: allow
     skill:
         "*": deny
         following-plans: allow
