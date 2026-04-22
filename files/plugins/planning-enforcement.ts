@@ -61,6 +61,7 @@ export const PlanningEnforcementPlugin: Plugin = async (_ctx) => {
       const pending = pendingPrompts.get(sessionID);
       if (!pending) return;
       pendingPrompts.delete(sessionID);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       await client.session.prompt({
         path: { id: sessionID },
         body: { parts: [{ type: "text", text: pending.text }] },
