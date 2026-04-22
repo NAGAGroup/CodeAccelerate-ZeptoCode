@@ -20,9 +20,9 @@
 1. **Context Retrieval (Preflight):** Use `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve prior findings relevant to the analysis questions and implementation goal above.
 
 2. **Analysis Delegation:** Draft a highly targeted prompt for the `context-insurgent` subagent that includes:
-	- The analysis questions above — treat them as pre-filled directives, not areas to generate or expand
-	- The retrieved prior findings as context (not for re-derivation)
-	- A clearly specified return format (insights per question, file/symbol cross-references, call graph implications, unresolved gaps)
+        - The analysis questions above — treat them as pre-filled directives, not areas to generate or expand
+        - The retrieved prior findings as context (not for re-derivation)
+        - A clearly specified return format (insights per question, file/symbol cross-references, call graph implications, unresolved gaps)
 
 3. **Delegation Gate:** Before calling `task`, verify: prompt addresses context-insurgent directly, retrieved context is integrated, return format is specified. Revise if any check fails, then call `task` with `subagent_type=context-insurgent`.
 

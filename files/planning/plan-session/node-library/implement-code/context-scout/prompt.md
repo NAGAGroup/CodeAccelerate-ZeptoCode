@@ -19,9 +19,9 @@
 1. **Context Retrieval (Preflight):** Use `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve prior findings relevant to the survey topics and implementation goal above.
 
 2. **Survey Delegation:** Draft a highly targeted prompt for the `context-scout` subagent that includes:
-	- The survey topics above — treat them as pre-filled directives, not areas to generate or expand
-	- The retrieved prior findings as context (not for re-derivation)
-	- A clearly specified return format (findings per topic, file/symbol cross-references, call graph summary, unresolved gaps)
+        - The survey topics above — treat them as pre-filled directives, not areas to generate or expand
+        - The retrieved prior findings as context (not for re-derivation)
+        - A clearly specified return format (findings per topic, file/symbol cross-references, call graph summary, unresolved gaps)
 
 3. **Delegation Gate:** Before calling `task`, verify: prompt addresses context-scout directly, retrieved context is integrated, return format is specified. Revise if any check fails, then call `task` with `subagent_type=context-scout`.
 

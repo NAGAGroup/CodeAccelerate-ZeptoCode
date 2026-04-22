@@ -21,10 +21,10 @@
 0. **Pre-Work Queries:** Call `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve any previous context that could be helpful. You *must* include one query for `"[DECISION]"`, which will inform any additional constraints that need to be included in your prompt.
 
 1. **Prompt Drafting:** Draft a clear, actionable prompt for junior-dev that includes:
-	- The implementation instructions above — treat them as pre-filled directives, not areas to generate or expand.
-	- The constraints and planning context as relevant to the implementation steps.
-	- Provide web search instructions, if any, so junior-dev knows where to look to help with implementation and troubleshooting.
-	- A clearly specified return format (what was implemented, any issues encountered, and how they were resolved).
+        - The implementation instructions above — treat them as pre-filled directives, not areas to generate or expand.
+        - The constraints and planning context as relevant to the implementation steps.
+        - Provide web search instructions, if any, so junior-dev knows where to look to help with implementation and troubleshooting.
+        - A clearly specified return format (what was implemented, any issues encountered, and how they were resolved).
 
 2. **Delegation Gate:** Before calling `task`, verify: prompt addresses junior-dev directly, retrieved context is integrated, web search instructions included if web search instructions are present, return format is specified. Revise if any check fails, then call `task` with `subagent_type=junior-dev`.
 

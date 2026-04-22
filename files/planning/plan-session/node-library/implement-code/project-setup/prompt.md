@@ -17,10 +17,10 @@
 1. **Context Retrieval:** Use `qdrant_qdrant-find` with `collection_name={{PLAN_NAME}}` to retrieve environment constraints, known dependency versions, and any prior failed attempts that affect how these steps should run.
 
 2. **Prompt Drafting:** Draft the prompt for junior-dev that includes:
-	- The setup instructions above — treat them as pre-filled directives, not areas to generate or expand.
-	- The retrieved context and environment constraints.
-	- Provide web search instructions, if any, so junior-dev knows where to look to help with setup and troubleshooting.
-	- A clearly specified return format (what was set up, any issues encountered, and how they were resolved).
+        - The setup instructions above — treat them as pre-filled directives, not areas to generate or expand.
+        - The retrieved context and environment constraints.
+        - Provide web search instructions, if any, so junior-dev knows where to look to help with setup and troubleshooting.
+        - A clearly specified return format (what was set up, any issues encountered, and how they were resolved).
 
 3. **Delegation Gate:** Before calling `task`, verify: prompt addresses junior-dev directly, retrieved context is integrated, web search instructions included if web search instructions are present, return format is specified. Revise if any check fails, then call `task` with `subagent_type=junior-dev`.
 

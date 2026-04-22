@@ -13,10 +13,7 @@
       },
       "models": {
         "opencode-model": {
-          "name": "Default Ollama",
-          "options": {
-            "reasoningEffort": "high"
-          }
+          "name": "Default Ollama"
         }
       }
     }
