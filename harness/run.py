@@ -16,27 +16,13 @@ import dspy
 sys.path.insert(0, str(Path(__file__).parent))
 
 from config import REPO_ROOT, RESULTS_DIR, HARNESS_DIR
-from module import ZeptocodeModule, TUI_PLAN_SESSION_ARGUMENTS
+from module import ZeptocodeModule
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
-
-# ── Kickoff commands per scenario name ──────────────────────────────────────
-# Each entry is (command, arguments) — dispatched via /session/{id}/command
-# so that slash commands expand correctly rather than being treated as raw text.
-KICKOFF_COMMANDS: dict[str, tuple[str, str]] = {
-    "cpp-demo-fmt-argparse-extension": (
-        "activate-plan",
-        "cpp-demo-fmt-argparse-extension",
-    ),
-    "tui-widget-library-cpp": (
-        "plan-session",
-        TUI_PLAN_SESSION_ARGUMENTS,
-    ),
-}
 
 
 def load_manifest(manifest_path: Path) -> list[dict]:
@@ -94,13 +80,13 @@ def main() -> None:
     for scenario in scenarios:
         name = scenario["name"]
         stype = scenario["type"]
-        kickoff = KICKOFF_COMMANDS.get(name)
+        kickoff_command = scenario.get("command")
+        kickoff_arguments = scenario.get("arguments", "")
 
-        if kickoff is None:
-            logger.warning(f"No kickoff command defined for scenario '{name}' — skipping")
+        if not kickoff_command:
+            logger.warning(f"No command defined for scenario '{name}' in manifest — skipping")
             continue
 
-        kickoff_command, kickoff_arguments = kickoff
         logger.info(f"─── Running scenario: {name} (type={stype}) ───")
 
         module = ZeptocodeModule(

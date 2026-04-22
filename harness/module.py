@@ -19,34 +19,6 @@ logger = logging.getLogger(__name__)
 # Scenario project directory (all harness runs target this project)
 SCENARIO_PROJECT_DIR = REPO_ROOT / "optimization-scenarios" / "cpp-greenfield-project"
 
-# TUI planning prompt body — sent as arguments to /plan-session command
-TUI_PLAN_SESSION_ARGUMENTS = (
-    "I want to add a TUI component library to the cpp-demo-project (C++, CMake, Pixi, C++23). "
-    "The library should support 3-4 distinct widget types, each with different rendering requirements: "
-    "a text label, a progress bar, a table, and an interactive input box.\n\n"
-    "I want to be involved in choosing which widgets to prioritize and what the rendering approach "
-    "should be for each — there are real tradeoffs here (stateful vs stateless rendering, ANSI escape "
-    "codes vs a terminal library, shared rendering primitives vs per-widget rendering, color support vs "
-    "monochrome). Different widget types may warrant different approaches and should be explored "
-    "independently.\n\n"
-    "Hard constraints:\n"
-    "- The plan must use a collaborate phase to involve me in widget selection and rendering approach "
-    "decisions before implementation begins.\n"
-    "- Widget types that share rendering primitives should be planned with a merge point back to a "
-    "shared implementation phase; widget types with independent rendering should remain on separate "
-    "branches through to completion.\n"
-    "- Each widget implementation branch should be broken into sequential phases: "
-    "research/deliberate -> implement -> verify -> document.\n"
-    "- Nested deliberation is expected: top-level decisions about shared architecture, then per-widget "
-    "decisions about rendering specifics.\n"
-    "- Some branches should merge (shared interface/base class), others should not "
-    "(widget-specific rendering logic).\n"
-    "- The plan must be as structurally complex as the task warrants — do not simplify the DAG "
-    "topology to make it easier to generate. If the task naturally requires nested branches, "
-    "asymmetric merges, or multiple collaborate phases, include them.\n"
-    "- Pixi for all package management; CPM for any GitHub-only dependencies."
-)
-
 # Frontmatter regex — splits at second '---' delimiter
 _FM_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n(.*?)$", re.DOTALL)
 
