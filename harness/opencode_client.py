@@ -1,6 +1,7 @@
 """
 OpenCode headless HTTP API client for the ZeptoCode prompt optimization harness.
 """
+
 import json
 import logging
 import os
@@ -34,7 +35,15 @@ class OpenCodeClient:
         env["OPENCODE_OLLAMA_PORT"] = "8000"
 
         proc = subprocess.Popen(
-            ["ocx", "opencode", "-p", "naga-ollama", "serve", "--port", str(self.port)],
+            [
+                os.path.expanduser("~/.pixi/envs/nodejs/bin/ocx"),
+                "opencode",
+                "-p",
+                "naga-ollama",
+                "serve",
+                "--port",
+                str(self.port),
+            ],
             cwd=str(self.scenario_dir),
             env=env,
             stdout=subprocess.PIPE,
@@ -45,17 +54,22 @@ class OpenCodeClient:
         # Poll until port accepts connections (up to 30s)
         start_time = time.time()
         while time.time() - start_time < 30:
+            time.sleep(10)
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             result = sock.connect_ex(("localhost", self.port))
             sock.close()
             if result == 0:
-                time.sleep(10)  # let MCP servers (Qdrant, searxng, context7) fully initialise
+                time.sleep(
+                    10
+                )  # let MCP servers (Qdrant, searxng, context7) fully initialise
                 return proc
             time.sleep(0.2)
 
         proc.kill()
         proc.wait()
-        raise RuntimeError(f"OpenCode server did not become ready on port {self.port} within 30s")
+        raise RuntimeError(
+            f"OpenCode server did not become ready on port {self.port} within 30s"
+        )
 
     def stop_server(self, proc: subprocess.Popen) -> None:
         """Gracefully stop the OpenCode server, force-killing if needed."""
@@ -86,6 +100,7 @@ class OpenCodeClient:
         the SSE stream. This is the only correct way to trigger slash command
         expansion — prompt_async sends plain text that the model reads literally.
         """
+
         def _fire():
             try:
                 with httpx.Client(timeout=httpx.Timeout(600.0, connect=10.0)) as client:
@@ -100,7 +115,9 @@ class OpenCodeClient:
         t = threading.Thread(target=_fire, daemon=True)
         t.start()
 
-    def wait_for_completion(self, session_id: str, idle_timeout: int = 300) -> list[dict]:
+    def wait_for_completion(
+        self, session_id: str, idle_timeout: int = 300
+    ) -> list[dict]:
         """
         Collect SSE events until session.idle, session.error, or idle timeout.
 
@@ -120,11 +137,11 @@ class OpenCodeClient:
         def _consume():
             collected = []
             now = time.time()
-            last_any_event = now      # reset on ANY session event
-            last_delta = now          # reset only on message.part.delta
-            delta_timeout = 600       # 10 min no delta = model hung
-            any_event_timeout = 600   # default: 10 min between any events
-            post_idle_timeout = 10    # after session.idle: only 10s before declaring done
+            last_any_event = now  # reset on ANY session event
+            last_delta = now  # reset only on message.part.delta
+            delta_timeout = 600  # 10 min no delta = model hung
+            any_event_timeout = 600  # default: 10 min between any events
+            post_idle_timeout = 10  # after session.idle: only 10s before declaring done
             current_timeout = any_event_timeout
             try:
                 timeout = httpx.Timeout(
@@ -144,10 +161,14 @@ class OpenCodeClient:
 
                             if not line or not line.startswith("data:"):
                                 if now - last_delta > delta_timeout:
-                                    logger.warning(f"No model output for {delta_timeout}s — declaring hung")
+                                    logger.warning(
+                                        f"No model output for {delta_timeout}s — declaring hung"
+                                    )
                                     break
                                 if now - last_any_event > current_timeout:
-                                    logger.info(f"No events for {current_timeout}s — session complete")
+                                    logger.info(
+                                        f"No events for {current_timeout}s — session complete"
+                                    )
                                     break
                                 continue
 
@@ -161,10 +182,14 @@ class OpenCodeClient:
 
                             if props.get("sessionID") != session_id:
                                 if now - last_delta > delta_timeout:
-                                    logger.warning(f"No model output for {delta_timeout}s — declaring hung")
+                                    logger.warning(
+                                        f"No model output for {delta_timeout}s — declaring hung"
+                                    )
                                     break
                                 if now - last_any_event > current_timeout:
-                                    logger.info(f"No events for {current_timeout}s — session complete")
+                                    logger.info(
+                                        f"No events for {current_timeout}s — session complete"
+                                    )
                                     break
                                 continue
 
@@ -186,7 +211,9 @@ class OpenCodeClient:
                                 # Model finished a turn — switch to short timeout
                                 # If nothing happens within 10s, we're done
                                 print("", flush=True)
-                                logger.info("session.idle — waiting up to 10s for next activity")
+                                logger.info(
+                                    "session.idle — waiting up to 10s for next activity"
+                                )
                                 current_timeout = post_idle_timeout
                             elif t == "session.error":
                                 logger.warning(f"session.error: {props}")
@@ -200,9 +227,11 @@ class OpenCodeClient:
             finally:
                 result_queue.put(collected)
 
+        DELTA_TIMEOUT = 600  # mirror of delta_timeout inside _consume
+
         thread = threading.Thread(target=_consume, daemon=True)
         thread.start()
-        thread.join(timeout=delta_timeout + 120)
+        thread.join(timeout=DELTA_TIMEOUT + 120)
 
         if thread.is_alive():
             stop_event.set()
@@ -230,7 +259,9 @@ class OpenCodeClient:
             with httpx.Client(timeout=5.0) as client:
                 response = client.delete(f"{self.base_url}/session/{session_id}")
                 if not (200 <= response.status_code < 300):
-                    logger.warning(f"DELETE /session/{session_id} returned {response.status_code}")
+                    logger.warning(
+                        f"DELETE /session/{session_id} returned {response.status_code}"
+                    )
         except Exception as e:
             logger.warning(f"Failed to delete session {session_id}: {e}")
 

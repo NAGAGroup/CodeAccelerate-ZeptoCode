@@ -4,6 +4,7 @@ ZeptoCode DSPy Module — wraps OpenCode session execution as a dspy.Module.
 import logging
 import os
 import re
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -211,6 +212,7 @@ class ZeptocodeModule(dspy.Module):
                 logger.warning(f"Failed to write mutation to {rel_path}: {e}")
 
         # Sync files/planning → ~/.config/opencode/planning
+        shutil.rmtree(os.path.expanduser("~/.config/opencode/planning"), ignore_errors=True)
         subprocess.run(
             ["cp", "-r",
              str(self.repo_root / "files" / "planning"),
@@ -218,6 +220,7 @@ class ZeptocodeModule(dspy.Module):
             check=True, timeout=30,
         )
         # Sync files/agents → ~/.config/opencode/profiles/naga-ollama/agents
+        shutil.rmtree(os.path.expanduser("~/.config/opencode/profiles/naga-ollama/agents"), ignore_errors=True)
         subprocess.run(
             ["cp", "-r",
              str(self.repo_root / "files" / "agents"),

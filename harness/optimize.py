@@ -132,7 +132,7 @@ def main():
     gepa = dspy.GEPA(
         metric=metric,
         reflection_lm=reflection_lm,
-        auto="heavy",           # aggressive mutation strategy
+        max_full_evals=2,
         num_threads=1,           # one at a time — single OpenCode server
         seed=42,
     )
