@@ -1,0 +1,11 @@
+[workspace]
+name = "prompt-optimization-harness"
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[dependencies]
+python = ">=3.10"
+pip = ">=23.0"
+setuptools = ">=68.0"
+wheel = ">=0.41.0"

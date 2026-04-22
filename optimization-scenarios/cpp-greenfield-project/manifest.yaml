@@ -1,0 +1,5 @@
+scenarios:
+  - name: cpp-demo-fmt-argparse-extension
+    type: execution
+  - name: tui-widget-library-cpp
+    type: planning

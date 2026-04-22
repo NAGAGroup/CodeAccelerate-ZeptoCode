@@ -11,3 +11,14 @@ node_modules/
 .DS_Store
 .opencode/**
 .grepai/
+
+# Optimization scenarios — working project dirs are ephemeral (reset by harness between runs)
+optimization-scenarios/cpp-greenfield-project/app/
+optimization-scenarios/cpp-greenfield-project/pixi.toml
+optimization-scenarios/cpp-greenfield-project/pixi.lock
+
+# Harness — Python bytecode and local OpenCode state
+harness/__pycache__/
+harness/*.pyc
+harness/.opencode/
+harness/prompt_optimization_harness.egg-info/
