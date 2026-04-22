@@ -1,2 +1,6 @@
 !.opencode/
 !.opencode/**
+
+# Optimization scenario projects are gitignored but agents still need access
+!optimization-scenarios/
+!optimization-scenarios/**

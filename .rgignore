@@ -1,0 +1,3 @@
+# Optimization scenario projects are gitignored but should still be searchable
+!optimization-scenarios/
+!optimization-scenarios/**
