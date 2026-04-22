@@ -111101,10 +111101,7 @@ async function handlePlanSessionAfter(input, _output, deps) {
   const promptText = readPrompt(entryNode.prompt, worktree, sessionPath, {
     planning_session_id: state.planning_session_id
   });
-  deps.client.session.prompt({
-    path: { id: input.sessionID },
-    body: { parts: [{ type: "text", text: promptText }] }
-  });
+  deps.pendingPrompts.set(input.sessionID, { text: promptText });
   return true;
 }
 
@@ -111125,10 +111122,7 @@ async function handleActivatePlanAfter(input, _output, deps) {
     plan_name: state.plan_name,
     inject: entryNode.inject
   });
-  deps.client.session.prompt({
-    path: { id: input.sessionID },
-    body: { parts: [{ type: "text", text: promptText }] }
-  });
+  deps.pendingPrompts.set(input.sessionID, { text: promptText });
   return true;
 }
 
@@ -111155,10 +111149,7 @@ async function handleNextStepAfter(input, _output, deps) {
     planning_session_id: state.planning_session_id,
     inject: currentNode.inject
   });
-  deps.client.session.prompt({
-    path: { id: input.sessionID },
-    body: { parts: [{ type: "text", text: promptText }] }
-  });
+  deps.pendingPrompts.set(input.sessionID, { text: promptText });
   return true;
 }
 
@@ -111241,6 +111232,7 @@ var PlanningEnforcementPlugin = async (_ctx) => {
   const { client } = _ctx;
   const resolveWorktree = (_ctx2) => process.cwd();
   let _dagActiveThisTurn = false;
+  const pendingPrompts = new Map;
   ensureOpenCodeIgnore(resolveWorktree(_ctx));
   const deps = {
     client,
@@ -111249,7 +111241,8 @@ var PlanningEnforcementPlugin = async (_ctx) => {
     setDagActiveThisTurn: (value) => {
       _dagActiveThisTurn = value;
     },
-    pluginCtx: _ctx
+    pluginCtx: _ctx,
+    pendingPrompts
   };
   const sessionHooks = createSessionHooks(deps);
   return {
@@ -111264,6 +111257,21 @@ var PlanningEnforcementPlugin = async (_ctx) => {
     },
     "tool.execute.after": async (input, output) => {
       await afterHook(input, output, deps);
+    },
+    event: async ({ event }) => {
+      if (event.type !== "session.idle")
+        return;
+      const sessionID = event.properties?.sessionID;
+      if (!sessionID)
+        return;
+      const pending = pendingPrompts.get(sessionID);
+      if (!pending)
+        return;
+      pendingPrompts.delete(sessionID);
+      await client.session.prompt({
+        path: { id: sessionID },
+        body: { parts: [{ type: "text", text: pending.text }] }
+      });
     },
     "chat.params": sessionHooks["chat.params"],
     "experimental.session.compacting": sessionHooks["experimental.session.compacting"]

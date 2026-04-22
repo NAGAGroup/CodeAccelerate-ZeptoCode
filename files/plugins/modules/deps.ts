@@ -13,4 +13,11 @@ export interface PluginDeps {
   setDagActiveThisTurn: (value: boolean) => void;
   /** The raw plugin context (_ctx) for hooks that need it. */
   pluginCtx: { worktree?: string };
+  /**
+   * Pending prompt injections keyed by sessionID.
+   * After-hooks store prompts here instead of calling session.prompt directly.
+   * The event hook fires them on session.idle, guaranteeing the model has
+   * finished its current turn before the next prompt arrives.
+   */
+  pendingPrompts: Map<string, { text: string }>;
 }
