@@ -104967,7 +104967,7 @@ function createNavigationTools(deps) {
         }
         const { metadata } = readDagV3(state.plan_path);
         const isFromEntryNode = node.id === metadata.entry_node_id;
-        return "";
+        return "Success. Stop and wait for the next instructions.";
       }
     }),
     get_branch_options: tool({

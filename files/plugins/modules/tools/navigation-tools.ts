@@ -3,7 +3,10 @@ import type { PluginDeps } from "../deps";
 import { dagStatePath, readState, writeState, now } from "../../state-io";
 import { readPrompt } from "../../path-utils";
 import { readDagV3 } from "../../dag-io";
-import { detectDivergence, suggestRecoveryActions } from "../../divergence-detection";
+import {
+  detectDivergence,
+  suggestRecoveryActions,
+} from "../../divergence-detection";
 import { allRemainingOptional } from "../dag_engine/enforcement-utils";
 
 export function createNavigationTools(deps: PluginDeps) {
@@ -22,21 +25,29 @@ export function createNavigationTools(deps: PluginDeps) {
           ),
       },
       async execute({ next }, context) {
-        const statePath = dagStatePath(resolveWorktree(context), context.sessionID);
+        const statePath = dagStatePath(
+          resolveWorktree(context),
+          context.sessionID,
+        );
         const state = readState(statePath);
 
         if (!state) return "No active DAG session.";
-        if (state.status === "complete") return `DAG session "${state.dag_id}" is already complete.`;
+        if (state.status === "complete")
+          return `DAG session "${state.dag_id}" is already complete.`;
 
         const currentNode = state.node_map[state.current_node];
 
         // Enforcement check
         const canProceed =
           state.status === "waiting_step" ||
-          (currentNode ? allRemainingOptional(currentNode.enforcement, state.todo_index) : true);
+          (currentNode
+            ? allRemainingOptional(currentNode.enforcement, state.todo_index)
+            : true);
 
         if (!canProceed) {
-          const remaining = currentNode ? currentNode.enforcement.length - state.todo_index : 0;
+          const remaining = currentNode
+            ? currentNode.enforcement.length - state.todo_index
+            : 0;
           const nextExpected = currentNode
             ? (currentNode.enforcement[state.todo_index] ?? "none")
             : "unknown";
@@ -48,7 +59,8 @@ export function createNavigationTools(deps: PluginDeps) {
         }
 
         const node = state.node_map[state.current_node];
-        if (!node) return `Current node "${state.current_node}" not found in DAG.`;
+        if (!node)
+          return `Current node "${state.current_node}" not found in DAG.`;
 
         const children = node.children ?? [];
 
@@ -103,7 +115,8 @@ export function createNavigationTools(deps: PluginDeps) {
         // Advance to next node
         const nextId = children.length === 1 ? children[0] : next!;
         const nextNode = state.node_map[nextId];
-        if (!nextNode) throw new Error(`Next node "${nextId}" not found in DAG`);
+        if (!nextNode)
+          throw new Error(`Next node "${nextId}" not found in DAG`);
 
         state.current_node = nextId;
         state.todo_index = 0;
@@ -122,7 +135,7 @@ export function createNavigationTools(deps: PluginDeps) {
         const { metadata } = readDagV3(state.plan_path);
         const isFromEntryNode = node.id === metadata.entry_node_id;
 
-        return "";
+        return "Success. Stop and wait for the next instructions.";
       },
     }),
 
@@ -131,13 +144,17 @@ export function createNavigationTools(deps: PluginDeps) {
         "Returns the branch phase options available for next_step at the current branching node. Call this before making a routing decision to know the valid options.",
       args: {},
       async execute(_args, context) {
-        const statePath = dagStatePath(resolveWorktree(context), context.sessionID);
+        const statePath = dagStatePath(
+          resolveWorktree(context),
+          context.sessionID,
+        );
         const state = readState(statePath);
 
         if (!state) return "No active DAG session.";
 
         const node = state.node_map[state.current_node];
-        if (!node) return `Current node "${state.current_node}" not found in DAG.`;
+        if (!node)
+          return `Current node "${state.current_node}" not found in DAG.`;
 
         const children = node.children ?? [];
         if (children.length !== 2) {
@@ -169,14 +186,18 @@ export function createNavigationTools(deps: PluginDeps) {
           }
           const suggestions = suggestRecoveryActions(divergenceReport);
           divergenceWarning += "Suggested Recovery Actions:\n";
-          suggestions.forEach((s) => { divergenceWarning += `${s}\n`; });
+          suggestions.forEach((s) => {
+            divergenceWarning += `${s}\n`;
+          });
           divergenceWarning += "\n";
         }
 
         // Resume abandoned session
         if (state.status === "abandoned") {
           const node = state.node_map[state.current_node];
-          const remaining = node ? node.enforcement.length - state.todo_index : 0;
+          const remaining = node
+            ? node.enforcement.length - state.todo_index
+            : 0;
           state.status = remaining === 0 ? "waiting_step" : "running";
           state.updated_at = now();
           writeState(statePath, state);
@@ -200,7 +221,9 @@ export function createNavigationTools(deps: PluginDeps) {
 
         const decisionsLog =
           state.decisions.length > 0
-            ? state.decisions.map((d) => `- [${d.node_id}] ${d.summary}`).join("\n")
+            ? state.decisions
+                .map((d) => `- [${d.node_id}] ${d.summary}`)
+                .join("\n")
             : "None yet";
 
         let result = divergenceWarning + `DAG Session Recovery\n\n`;
@@ -225,7 +248,10 @@ export function createNavigationTools(deps: PluginDeps) {
         "Abandon the current DAG session. Sets status to 'abandoned' and saves state. Use when a session needs to be exited due to a bug, user cancellation, or scope change.",
       args: {},
       async execute(_args, context) {
-        const statePath = dagStatePath(resolveWorktree(context), context.sessionID);
+        const statePath = dagStatePath(
+          resolveWorktree(context),
+          context.sessionID,
+        );
         const state = readState(statePath);
 
         if (!state) return "No active DAG session found. Nothing to exit.";
