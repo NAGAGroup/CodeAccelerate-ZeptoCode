@@ -15,8 +15,8 @@ import dspy
 # Ensure harness/ is on the path when run directly
 sys.path.insert(0, str(Path(__file__).parent))
 
-from config import REPO_ROOT, SCENARIOS_DIR, RESULTS_DIR, HARNESS_DIR
-from module import ZeptocodeModule, TUI_KICKOFF_MESSAGE
+from config import REPO_ROOT, RESULTS_DIR, HARNESS_DIR
+from module import ZeptocodeModule, TUI_PLAN_SESSION_ARGUMENTS
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,10 +24,18 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ── Kickoff messages per scenario name ──────────────────────────────────────
-KICKOFF_MESSAGES = {
-    "cpp-demo-fmt-argparse-extension": "/activate-plan cpp-demo-fmt-argparse-extension",
-    "tui-widget-library-cpp": TUI_KICKOFF_MESSAGE,
+# ── Kickoff commands per scenario name ──────────────────────────────────────
+# Each entry is (command, arguments) — dispatched via /session/{id}/command
+# so that slash commands expand correctly rather than being treated as raw text.
+KICKOFF_COMMANDS: dict[str, tuple[str, str]] = {
+    "cpp-demo-fmt-argparse-extension": (
+        "activate-plan",
+        "cpp-demo-fmt-argparse-extension",
+    ),
+    "tui-widget-library-cpp": (
+        "plan-session",
+        TUI_PLAN_SESSION_ARGUMENTS,
+    ),
 }
 
 
@@ -56,7 +64,7 @@ def save_result(scenario_name: str, scenario_type: str, score: float, feedback: 
 
 
 def main() -> None:
-    # ── Configure DSPy global LM (gemma4:4b via llama.cpp at port 8000) ───
+    # ── Configure DSPy global LM (gemma4:4b via llama.cpp at port 8000) ─────
     ollama_lm = dspy.LM(
         "ollama_chat/gemma4:4b",
         api_base="http://localhost:8000/v1",
@@ -65,44 +73,44 @@ def main() -> None:
     dspy.configure(lm=ollama_lm)
     logger.info(f"DSPy global LM configured: {dspy.settings.lm}")
 
-    # ── Claude Sonnet as GEPA reflection LM (not used in single-pass mode) ─
-    reflection_lm = dspy.LM(
+    # ── Claude Sonnet as GEPA reflection LM (not used in single-pass mode) ───
+    # Kept here for future gepa.compile() use.
+    reflection_lm = dspy.LM(  # noqa: F841
         "anthropic/claude-sonnet-4-5-20250929",
         api_key=os.environ.get("ANTHROPIC_API_KEY", ""),
     )
 
-    # ── Load scenarios from manifest ────────────────────────────────────────
+    # ── Load scenarios from manifest ─────────────────────────────────────────
     manifest_path = HARNESS_DIR / "manifest.yaml"
     scenarios = load_manifest(manifest_path)
     logger.info(f"Loaded {len(scenarios)} scenario(s) from {manifest_path}")
 
-    # ── GEPA instantiation (for documentation/future use — NOT called here) ─
-    # To run full optimization in future, replace forward() calls below with:
-    #   gepa = dspy.GEPA(metric=metric_fn, reflection_lm=reflection_lm, max_full_evals=1, auto='light')
-    #   gepa.compile(student=module, trainset=trainset, valset=trainset)
-    # For now: single-pass baseline evaluation only.
+    # ── GEPA (future use — not called for single-pass baseline) ──────────────
+    # gepa = dspy.GEPA(metric=metric_fn, reflection_lm=reflection_lm, max_full_evals=1, auto='light')
+    # gepa.compile(student=module, trainset=trainset, valset=trainset)
 
     results = []
 
     for scenario in scenarios:
         name = scenario["name"]
         stype = scenario["type"]
-        kickoff = KICKOFF_MESSAGES.get(name)
+        kickoff = KICKOFF_COMMANDS.get(name)
 
         if kickoff is None:
-            logger.warning(f"No kickoff message defined for scenario '{name}' — skipping")
+            logger.warning(f"No kickoff command defined for scenario '{name}' — skipping")
             continue
 
+        kickoff_command, kickoff_arguments = kickoff
         logger.info(f"─── Running scenario: {name} (type={stype}) ───")
 
         module = ZeptocodeModule(
             repo_root=REPO_ROOT,
             scenario_name=name,
             scenario_type=stype,
-            kickoff_message=kickoff,
+            kickoff_command=kickoff_command,
+            kickoff_arguments=kickoff_arguments,
         )
 
-        # Single baseline forward pass (no mutations — evaluates current prompts as-is)
         try:
             prediction = module.forward()
             score = float(prediction.score)
@@ -116,7 +124,6 @@ def main() -> None:
         results.append({"scenario": name, "type": stype, "score": score, "result_path": str(out_path)})
         logger.info(f"Scenario {name}: score={score:.3f}")
 
-    # ── Summary ──────────────────────────────────────────────────────────────
     logger.info("═══ Evaluation Complete ═══")
     for r in results:
         logger.info(f"  {r['scenario']} ({r['type']}): score={r['score']:.3f} → {r['result_path']}")
