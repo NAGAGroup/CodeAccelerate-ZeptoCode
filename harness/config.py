@@ -21,3 +21,8 @@ IDLE_TIMEOUT_SECONDS = 60
 
 # Output directory for JSON results
 RESULTS_DIR = REPO_ROOT / "harness" / "results"
+
+# Agent files excluded from prompt optimization (not yet used in DAG system)
+OPTIMIZATION_EXCLUDED_AGENTS = {
+    "deep-researcher.md",
+}

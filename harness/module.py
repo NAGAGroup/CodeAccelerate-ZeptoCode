@@ -12,7 +12,7 @@ import dspy
 
 import tomllib
 
-from config import REPO_ROOT, RESULTS_DIR
+from config import REPO_ROOT, RESULTS_DIR, OPTIMIZATION_EXCLUDED_AGENTS
 from opencode_client import OpenCodeClient
 from judge import score_execution_run, score_planning_run
 
@@ -64,8 +64,11 @@ def prompt_surface_for_plan(phase_plan_toml: Path, repo_root: Path) -> dict[str,
     node_lib = repo_root / "files" / "planning" / "plan-session" / "node-library"
     agents_dir = repo_root / "files" / "agents"
 
-    # 1. All agent .md files
+    # 1. Agent .md files (excluding agents not yet wired into the DAG system)
     for agent_file in sorted(agents_dir.glob("*.md")):
+        if agent_file.name in OPTIMIZATION_EXCLUDED_AGENTS:
+            logger.debug(f"Skipping excluded agent: {agent_file.name}")
+            continue
         rel = str(agent_file.relative_to(repo_root))
         body = _extract_body(agent_file)
         if body is not None:
