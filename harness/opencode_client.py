@@ -123,7 +123,9 @@ class OpenCodeClient:
             last_any_event = now      # reset on ANY session event
             last_delta = now          # reset only on message.part.delta
             delta_timeout = 600       # 10 min no delta = model hung
-            any_event_timeout = 30    # 30 sec no events at all = session done
+            any_event_timeout = 600   # default: 10 min between any events
+            post_idle_timeout = 10    # after session.idle: only 10s before declaring done
+            current_timeout = any_event_timeout
             try:
                 timeout = httpx.Timeout(
                     delta_timeout + 60.0,
@@ -141,12 +143,11 @@ class OpenCodeClient:
                             now = time.time()
 
                             if not line or not line.startswith("data:"):
-                                # Check both timers on non-data lines
                                 if now - last_delta > delta_timeout:
                                     logger.warning(f"No model output for {delta_timeout}s — declaring hung")
                                     break
-                                if now - last_any_event > any_event_timeout:
-                                    logger.info(f"No events for {any_event_timeout}s — session complete")
+                                if now - last_any_event > current_timeout:
+                                    logger.info(f"No events for {current_timeout}s — session complete")
                                     break
                                 continue
 
@@ -159,12 +160,11 @@ class OpenCodeClient:
                             props = d.get("properties", {})
 
                             if props.get("sessionID") != session_id:
-                                # Still check timers for other sessions' events
                                 if now - last_delta > delta_timeout:
                                     logger.warning(f"No model output for {delta_timeout}s — declaring hung")
                                     break
-                                if now - last_any_event > any_event_timeout:
-                                    logger.info(f"No events for {any_event_timeout}s — session complete")
+                                if now - last_any_event > current_timeout:
+                                    logger.info(f"No events for {current_timeout}s — session complete")
                                     break
                                 continue
 
@@ -172,20 +172,29 @@ class OpenCodeClient:
                             last_any_event = now
 
                             if t == "message.part.delta":
-                                # Streaming token — reset delta timer and log to stdout
+                                # Streaming token — reset delta timer, log, switch to long timeout
                                 last_delta = now
+                                current_timeout = any_event_timeout
                                 delta = props.get("delta", "")
                                 if delta:
                                     print(delta, end="", flush=True)
                             elif t == "message.part.updated":
-                                # Finalized part — collect for transcript
+                                # Finalized part — collect for transcript, long timeout
                                 collected.append(props)
+                                current_timeout = any_event_timeout
                             elif t == "session.idle":
+                                # Model finished a turn — switch to short timeout
+                                # If nothing happens within 10s, we're done
                                 print("", flush=True)
-                                logger.info("session.idle")
+                                logger.info("session.idle — waiting up to 10s for next activity")
+                                current_timeout = post_idle_timeout
                             elif t == "session.error":
                                 logger.warning(f"session.error: {props}")
                                 break
+                            else:
+                                # Any other event (tool calls, session updates, etc.)
+                                # means work is happening — use long timeout
+                                current_timeout = any_event_timeout
             except Exception as e:
                 logger.warning(f"SSE consumer error: {e}")
             finally:
@@ -193,7 +202,7 @@ class OpenCodeClient:
 
         thread = threading.Thread(target=_consume, daemon=True)
         thread.start()
-        thread.join(timeout=idle_timeout + 120)
+        thread.join(timeout=delta_timeout + 120)
 
         if thread.is_alive():
             stop_event.set()
