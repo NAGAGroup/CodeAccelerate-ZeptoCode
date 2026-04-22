@@ -122,11 +122,7 @@ export function createNavigationTools(deps: PluginDeps) {
         const { metadata } = readDagV3(state.plan_path);
         const isFromEntryNode = node.id === metadata.entry_node_id;
 
-        let result = "";
-        if (!isFromEntryNode) result += `You have just completed "${node.id}". `;
-        result += `Please wait for your next task.`;
-
-        return result;
+        return true;
       },
     }),
 
