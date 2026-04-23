@@ -16,8 +16,8 @@ permission:
     smart_grep_trace_callers: allow
     smart_grep_trace_graph: allow
     smart_grep_index_status: allow
-    searxng_searxng_web_search: allow
-    searxng_web_url_read: allow
+    websearch: allow
+    webfetch: allow
     context7_resolve-library-id: allow
     context7_query-docs: allow
 ---
@@ -41,7 +41,7 @@ permission:
 
 2. Research & Validation
    - External Dependency Resolution: Using `context7_resolve-library-id` and `context7_query-docs` to validate external library behavior.
-   - Web Research: Executing targeted searches via `searxng_searxng_web_search` and gathering evidence using `searxng_web_url_read`.
+   - Web Research: Executing targeted searches via `websearch` and gathering evidence using `webfetch`.
    - System Execution: Utilizing `bash` for running build, test, and linter routines to establish validation gates.
 
 ## Rules
@@ -60,7 +60,7 @@ permission:
 
 3. Constraints:
    - Search Protocol Mandate: Must execute `context7_resolve-library-id` and `context7_query-docs` before external web searches.
-   - Web Reading Requirement: `searxng_web_url_read` must be used to read content from URLs discovered via `searxng_searxng_web_search`.
+   - Web Reading Requirement: `webfetch` must be used to read content from URLs discovered via `websearch`.
    - Scope Limitation & Priority: The agent's default scope is limited to minimal changes within the existing framework. Refactoring or redesign is only permitted if the task explicitly instructs it, and in such cases, the agent must execute the task exactly as specified, overriding the minimalism mandate.
    - Failure Protocol: If any validation gate fails, the agent must cycle back to the Search or Triage Protocol, not attempt a fix immediately.
 

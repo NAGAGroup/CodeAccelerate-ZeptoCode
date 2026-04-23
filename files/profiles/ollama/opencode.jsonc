@@ -77,16 +77,5 @@
         "EMBEDDING_MODEL": "sentence-transformers/all-MiniLM-L6-v2"
       },
       "enabled": true
-    },
-    // Self-hosted web search. Requires a running SearXNG instance on localhost:8080.
-    // To spin up a local instance: docker run -d -p 8080:8080 searxng/searxng
-    "searxng": {
-      "type": "local",
-      "command": ["npx", "-y", "mcp-searxng"],
-      "environment": {
-        "SEARXNG_URL": "http://localhost:8080"
-      },
-      "enabled": true
     }
-  }
 }
