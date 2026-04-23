@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import queue
+import signal
 import socket
 import subprocess
 import threading
@@ -72,13 +73,19 @@ class OpenCodeClient:
         )
 
     def stop_server(self, proc: subprocess.Popen) -> None:
-        """Gracefully stop the OpenCode server, force-killing if needed."""
-        proc.terminate()
+        """Kill the OpenCode server process group.
+
+        start_new_session=True puts ocx in its own session. ocx spawns the actual
+        .opencode binary as a child — that child holds the port. We must SIGKILL
+        the entire process group so .opencode is guaranteed dead and the port is
+        released before the next iteration starts.
+        """
         try:
-            proc.wait(timeout=10)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            proc.wait()
+            pgid = os.getpgid(proc.pid)
+            os.killpg(pgid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass  # process group already gone
+        proc.wait()
 
     def create_session(self) -> str:
         """Create a new session scoped to the scenario directory."""
