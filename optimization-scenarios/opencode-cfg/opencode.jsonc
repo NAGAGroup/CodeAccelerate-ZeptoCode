@@ -1,0 +1,82 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "autoupdate": false,
+  "small_model": "ollama/opencode-model",
+  "plugin": ["file://{env:HOME}/.config/opencode/plugins/planning-enforcement.js"],
+  "default_agent": "headwrench",
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (local)",
+      "options": {
+        "baseURL": "http://localhost:{env:OPENCODE_OLLAMA_PORT}/v1"
+      },
+      "models": {
+        "opencode-model": {
+          "name": "Default Ollama"
+        }
+      }
+    }
+  },
+  "agent": {
+    "plan": {
+      "disable": true
+    },
+    "general": {
+      "disable": true
+    },
+    "explore": {
+      "disable": true
+    },
+    "build": {
+      "model": "ollama/opencode-model"
+    },
+    "headwrench": {
+      "model": "ollama/opencode-model"
+    },
+    "context-scout": {
+      "model": "ollama/opencode-model"
+    },
+    "documentation-expert": {
+      "model": "ollama/opencode-model"
+    },
+    "junior-dev": {
+      "model": "ollama/opencode-model"
+    },
+    "context-insurgent": {
+      "model": "ollama/opencode-model"
+    },
+    "external-scout": {
+      "model": "ollama/opencode-model"
+    },
+    "deep-researcher": {
+      "model": "ollama/opencode-model"
+    },
+    "tailwrench": {
+      "model": "ollama/opencode-model"
+    },
+    "compaction": {
+      "model": "ollama/opencode-model"
+    }
+  },
+  "mcp": {
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp"],
+      "enabled": true
+    },
+    // Semantic session memory. Stores and retrieves findings by meaning across DAG steps.
+    // Connects to a shared Qdrant server instance (supports concurrent sessions).
+    // Start the server once: docker run -d --name qdrant -p 6333:6333 qdrant/qdrant
+    // Or without Docker: uvx mcp-server-qdrant
+    "qdrant": {
+      "type": "local",
+      "command": ["uvx", "mcp-server-qdrant"],
+      "environment": {
+        "QDRANT_LOCAL_PATH": ".opencode/qdrant",
+        "EMBEDDING_MODEL": "sentence-transformers/all-MiniLM-L6-v2"
+      },
+      "enabled": true
+    }
+  }
+}

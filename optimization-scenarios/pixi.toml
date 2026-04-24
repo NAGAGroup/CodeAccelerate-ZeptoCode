@@ -1,0 +1,15 @@
+[workspace]
+authors = ["Jack Myers <jackhmyers97@gmail.com>"]
+channels = ["conda-forge"]
+name = "optimization-scenarios"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[activation]
+scripts = ["env.sh"]
+
+[dependencies]
+python = ">=3.14.4,<3.15"
+dspy = ">=3.0.2,<4"
+ollama-python = ">=0.6.1,<0.7"
+gepa = ">=0.1.1,<0.2"

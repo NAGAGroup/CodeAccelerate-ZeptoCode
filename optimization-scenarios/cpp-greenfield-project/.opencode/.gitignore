@@ -1,8 +1,0 @@
-!.gitignore
-!qdrant/
-!qdrant/**
-!session-plans/
-!session-plans/*
-!session-plans/cpp-demo-fmt-argparse-extension/phase-plan.toml
-!session-plans/tui-widget-library-cpp/phase-plan.toml
-!session-plans/tui-widget-library-cpp/sonnet-planning-transcript.md
